@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>3D 極速無極限 - 能量競技場</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --accent: #ff007f;
+            --warning: #ffcc00;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-active: rgba(255, 255, 255, 0.2);
+        }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; background: #000; color: #fff; touch-action: none; }
+        canvas { display: block; }
+        
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        
+        /* 啟動畫面 */
+        #splash-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 1000;
+            transition: opacity 0.8s ease-in-out; pointer-events: auto;
+        }
+        .splash-content { text-align: center; }
+        .splash-text {
+            font-size: 1.2rem; font-weight: 300; letter-spacing: 5px; color: #888;
+            opacity: 0; animation: fadeInOut 3s forwards; text-transform: uppercase;
+        }
+        .splash-brand {
+            font-size: 2.5rem; font-weight: 900; color: #fff; margin-top: 10px;
+            opacity: 0; animation: fadeInOut 3s forwards; animation-delay: 0.2s;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(10px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+
+        /* 選單介面 */
+        .overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle, rgba(0,212,255,0.1) 0%, rgba(0,0,0,0.85) 100%);
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; pointer-events: auto; z-index: 100;
+            backdrop-filter: blur(15px);
+            transition: opacity 0.5s ease-out;
+        }
+        .menu-card { 
+            background: rgba(15, 15, 15, 0.8); padding: 30px; border-radius: 30px; 
+            box-shadow: 0 0 50px rgba(0,212,255,0.2); text-align: center; 
+            max-width: 650px; width: 90%; border: 1px solid rgba(255,255,255,0.1);
+            max-height: 90vh; overflow-y: auto;
+        }
+        h1 { font-size: 3rem; margin: 0; color: #fff; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; }
+        h1 span { color: var(--primary); }
+        .section-label { margin: 15px 0 8px; font-weight: 700; color: #888; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px; }
+        .options-group { margin-bottom: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .btn { 
+            background: var(--glass); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px 20px; 
+            cursor: pointer; border-radius: 12px; transition: 0.3s; font-size: 0.9rem;
+        }
+        .btn:hover { background: var(--glass-active); border-color: var(--primary); }
+        .btn.active { background: var(--primary); color: #000; font-weight: 800; border-color: #fff; }
+        .color-dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; transition: 0.2s; }
+        .color-dot.active { border-color: white; transform: scale(1.2); box-shadow: 0 0 15px var(--primary); }
+        .start-btn { background: #fff; color: #000; padding: 15px 80px; font-size: 1.5rem; border: none; border-radius: 50px; cursor: pointer; margin-top: 20px; font-weight: 900; transition: 0.4s; }
+        .start-btn:hover { background: var(--primary); transform: translateY(-3px); }
+
+        /* 設定介面 */
+        #settings-overlay { display: none; z-index: 1100; }
+        .settings-card { width: 400px; padding: 30px; }
+        .setting-row { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 15px; width: 100%; }
+        .setting-row label { font-size: 0.8rem; color: #aaa; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .slider-container { display: flex; align-items: center; gap: 15px; width: 100%; }
+        input[type="range"] { flex: 1; -webkit-appearance: none; background: rgba(255,255,255,0.1); height: 4px; border-radius: 2px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--primary); border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px var(--primary); }
+        
+        /* HUD 組件 */
+        .player-hud { position: absolute; bottom: 30px; display: flex; flex-direction: column; gap: 10px; opacity: 0; transition: opacity 0.8s ease-in; }
+        .p1-hud { left: 40px; }
+        .p2-hud { right: 40px; text-align: right; }
+        .panel { background: rgba(0,0,0,0.6); padding: 15px; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .speed-val { font-size: 3rem; font-weight: 900; color: var(--primary); line-height: 1; }
+        .obj-count { font-size: 2rem; font-weight: 900; color: var(--accent); }
+
+        .compass { position: absolute; top: 30px; width: 80px; height: 80px; opacity: 0; transition: opacity 0.8s ease-in; }
+        .p1-compass { left: 25%; transform: translateX(-50%); }
+        .p2-compass { right: 25%; transform: translateX(50%); }
+        .compass svg { width: 100%; height: 100%; filter: drop-shadow(0 0 8px var(--accent)); }
+
+        .radar { position: absolute; top: 20px; width: 180px; height: 180px; background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.2); border-radius: 10px; overflow: hidden; backdrop-filter: blur(5px); opacity: 0; transition: opacity 0.8s ease-in; }
+        .p1-radar { left: 20px; }
+        .p2-radar { right: 20px; }
+        .radar-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); }
+        .radar-dot.self { background: var(--primary); z-index: 5; }
+        .radar-dot.other { background: var(--accent); z-index: 4; }
+        .radar-dot.target { background: #fff; border: 2px solid var(--accent); z-index: 3; animation: pulse 1s infinite; }
+
+        /* 按鈕們 */
+        .icon-btn { position: absolute; top: 15px; width: 40px; height: 40px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; pointer-events: auto; border: 1px solid rgba(255,255,255,0.2); z-index: 600; opacity: 0; transition: opacity 1s; }
+        #settings-btn { right: 15px; }
+        #audio-btn { right: 65px; }
+
+        /* PE 佈局優化 */
+        body.pe-mode .radar { width: 120px; height: 120px; top: 10px; }
+        body.pe-mode .p1-radar { left: 10px; }
+        body.pe-mode .p2-radar { right: 10px; }
+        body.pe-mode .compass { width: 50px; height: 50px; top: 10px; }
+        body.pe-mode .p1-compass { left: 45%; }
+        body.pe-mode .p2-compass { right: 45%; }
+        body.pe-mode .player-hud { bottom: auto; top: 70px; gap: 5px; }
+        body.pe-mode .p1-hud { left: 10px; }
+        body.pe-mode .p2-hud { right: 10px; }
+        body.pe-mode .panel { padding: 8px 12px; border-radius: 12px; }
+        body.pe-mode .speed-val { font-size: 1.5rem; }
+        body.pe-mode .obj-count { font-size: 1.2rem; }
+        body.pe-mode .settings-card { width: 85%; }
+        body.pe-mode input[type="range"]::-webkit-slider-thumb { width: 28px; height: 28px; }
+
+        /* PE 虛擬控制 */
+        #mobile-controls { position: absolute; bottom: 30px; width: 100%; height: 160px; display: none; justify-content: space-between; padding: 0 30px; box-sizing: border-box; z-index: 500; opacity: 0; transition: opacity 0.8s; pointer-events: none; }
+        .ctrl-group { display: flex; gap: 15px; align-items: flex-end; pointer-events: auto; }
+        .touch-btn { width: 70px; height: 70px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 1.2rem; color: rgba(255,255,255,0.5); user-select: none; -webkit-tap-highlight-color: transparent; backdrop-filter: blur(5px); transition: 0.1s; }
+        .touch-btn:active { background: var(--primary); color: #000; border-color: #fff; transform: scale(0.85); }
+        .touch-btn.accel { background: rgba(0,212,255,0.2); height: 90px; width: 90px; color: #fff; border-color: var(--primary); }
+
+        #warning-box { position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 0, 0, 0.7); color: white; padding: 15px 30px; border-radius: 10px; font-weight: bold; display: none; z-index: 600; border: 2px solid white; text-align: center; font-size: 0.9rem; }
+        .esc-tip { position: absolute; top: 5px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: #666; opacity: 0; transition: opacity 1s; z-index: 550; }
+        .divider { position: absolute; left: 50%; top: 0; width: 2px; height: 100%; background: rgba(255,255,255,0.3); transform: translateX(-50%); display: none; opacity: 0; transition: opacity 1s; }
+    </style>
+</head>
+<body class="pc-mode">
+
+<div id="ui-layer">
+    <!-- 啟動畫面 -->
+    <div id="splash-screen">
+        <div class="splash-content">
+            <div class="splash-text">A Game Experience</div>
+            <div class="splash-brand">Produced by JSCZ International Group</div>
+        </div>
+    </div>
+
+    <!-- 主選單 -->
+    <div id="start-menu" class="overlay" style="display: none; opacity: 0;">
+        <div class="menu-card">
+            <h1>SPEED <span>ARENA</span></h1>
+            <p style="color: #666; font-size: 0.9rem;">能量核心採集賽 | 人性化 AI 模擬</p>
+            
+            <div class="section-label">競賽模式</div>
+            <div class="options-group">
+                <button class="btn active" id="mode-1p" onclick="setMode(1)">人機競速 (模仿型 AI)</button>
+                <button class="btn" id="mode-2p" onclick="setMode(2)">雙人對決 (同場競爭)</button>
+                <button class="btn" id="mode-spec" onclick="setMode(3)">巔峰觀賽 (AI 進化賽)</button>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: 40px; margin-top: 10px;">
+                <div id="p1-color-section">
+                    <div class="section-label" id="p1-label">玩家 1 顏色</div>
+                    <div class="options-group" id="p1-colors"></div>
+                </div>
+                <div>
+                    <div class="section-label" id="p2-label">玩家 2 / AI 顏色</div>
+                    <div class="options-group" id="p2-colors"></div>
+                </div>
+            </div>
+
+            <div class="section-label">目標核心數量</div>
+            <div class="options-group" id="diff-opts">
+                <button class="btn" onclick="setGoal(5)">5 核心</button>
+                <button class="btn active" onclick="setGoal(10)">10 核心</button>
+                <button class="btn" onclick="setGoal(20)">20 核心</button>
+            </div>
+
+            <button class="start-btn" onclick="startGame()">ENTER WORLD</button>
+            <div style="margin-top:15px;"><button class="btn" onclick="openSettings()">遊戲設定</button></div>
+        </div>
+    </div>
+
+    <!-- 設定視窗 -->
+    <div id="settings-overlay" class="overlay">
+        <div class="menu-card settings-card">
+            <h2 style="margin-top:0;">遊戲設定</h2>
+            
+            <div class="setting-row">
+                <label>主音量</label>
+                <div class="slider-container">
+                    <input type="range" id="vol-master" min="0" max="1" step="0.01" value="0.8" oninput="updateAudioSettings()">
+                </div>
+            </div>
+            <div class="setting-row">
+                <label>背景音樂</label>
+                <div class="slider-container">
+                    <input type="range" id="vol-bgm" min="0" max="1" step="0.01" value="0.3" oninput="updateAudioSettings()">
+                </div>
+            </div>
+            <div class="setting-row">
+                <label>引擎咆哮</label>
+                <div class="slider-container">
+                    <input type="range" id="vol-engine" min="0" max="1" step="0.01" value="0.5" oninput="updateAudioSettings()">
+                </div>
+            </div>
+            <div class="setting-row">
+                <label>特效音</label>
+                <div class="slider-container">
+                    <input type="range" id="vol-sfx" min="0" max="1" step="0.01" value="0.6" oninput="updateAudioSettings()">
+                </div>
+            </div>
+
+            <button class="start-btn" style="padding:10px 40px; font-size:1.1rem;" onclick="closeSettings()">完成</button>
+        </div>
+    </div>
+
+    <!-- 功能按鈕 -->
+    <div id="settings-btn" class="icon-btn" onclick="openSettings()">⚙️</div>
+    <div id="audio-btn" class="icon-btn" onclick="toggleMute()">🔊</div>
+
+    <!-- 贏家畫面 -->
+    <div id="win-screen" class="overlay" style="display: none;">
+        <div class="menu-card">
+            <h1 id="win-title">RACE FINISHED</h1>
+            <p id="win-msg" style="margin: 20px 0; font-size: 1.1rem; white-space: pre-wrap;">計算排名中...</p>
+            <button class="start-btn" onclick="location.reload()">返回主選單</button>
+        </div>
+    </div>
+
+    <!-- HUD 元素 -->
+    <div id="p1-nav" class="compass p1-compass" style="display:none;"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" /><path d="M50 10 L65 45 L50 38 L35 45 Z" id="p1-arrow-path" /></svg></div>
+    <div id="p2-nav" class="compass p2-compass" style="display:none;"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" /><path d="M50 10 L65 45 L50 38 L35 45 Z" id="p2-arrow-path" /></svg></div>
+
+    <div id="p1-radar-ui" class="radar p1-radar" style="display:none;"><div id="p1-radar-target" class="radar-dot target"></div><div id="p1-radar-other" class="radar-dot other"></div><div id="p1-radar-self" class="radar-dot self"></div></div>
+    <div id="p2-radar-ui" class="radar p2-radar" style="display:none;"><div id="p2-radar-target" class="radar-dot target"></div><div id="p2-radar-other" class="radar-dot other"></div><div id="p2-radar-self" class="radar-dot self"></div></div>
+
+    <div id="p1-hud" class="player-hud p1-hud" style="display:none;">
+        <div class="panel"><div class="speed-val" id="p1-speed">0</div><div style="font-size:0.6rem; opacity:0.6;" id="p1-hud-name">P1 KM/H</div></div>
+        <div class="panel"><div class="obj-count"><span id="p1-collected">0</span> / <span id="p1-total">10</span></div></div>
+    </div>
+    <div id="p2-hud" class="player-hud p2-hud" style="display:none;">
+        <div class="panel"><div class="speed-val" id="p2-speed">0</div><div style="font-size:0.6rem; opacity:0.6;" id="p2-hud-name">P2 KM/H</div></div>
+        <div class="panel"><div class="obj-count"><span id="p2-collected">0</span> / <span id="p2-total">10</span></div></div>
+    </div>
+
+    <!-- PE 控制 -->
+    <div id="mobile-controls"><div class="ctrl-group"><div class="touch-btn" id="btn-left">←</div><div class="touch-btn" id="btn-right">→</div></div><div class="ctrl-group"><div class="touch-btn" id="btn-down">B</div><div class="touch-btn accel" id="btn-up">GAS</div></div></div>
+
+    <div id="warning-box"><div>⚠️ 超越邊界 ⚠️</div><div id="warn-timer">3</div> 秒後自動回傳</div>
+    <div id="divider" class="divider"></div>
+    <div class="esc-tip" id="esc-ui-tip" style="display: none;">按 ESC 放棄比賽</div>
+</div>
+
+<script>
+    // 常數與配置 (移動到頂部以防止初始化錯誤)
+    const COLORS = [0x00d4ff, 0xff007f, 0x00ff7f, 0xffcc00, 0xffffff, 0x8800ff];
+    const WORLD_LIMIT = 4500;
+
+    // 全域狀態
+    let scene, renderer, clock = new THREE.Clock();
+    let p1, p2, checkpoints = [];
+    let gameMode = 1, goalCount = 10, p1Color = COLORS[0], p2Color = COLORS[1];
+    let gameRunning = false, isFinished = false, startTime = 0;
+    const keys = {};
+
+    // 裝置偵測
+    const isPE = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window);
+    if (isPE) document.body.classList.replace('pc-mode', 'pe-mode');
+
+    // 設置數據儲存
+    const PersistedSettings = {
+        master: 0.8, bgm: 0.3, engine: 0.5, sfx: 0.6, muted: false,
+        load() {
+            const data = JSON.parse(sessionStorage.getItem('racing_settings') || '{}');
+            if (data.master !== undefined) this.master = data.master;
+            if (data.bgm !== undefined) this.bgm = data.bgm;
+            if (data.engine !== undefined) this.engine = data.engine;
+            if (data.sfx !== undefined) this.sfx = data.sfx;
+            if (data.muted !== undefined) this.muted = data.muted;
+            
+            document.getElementById('vol-master').value = this.master;
+            document.getElementById('vol-bgm').value = this.bgm;
+            document.getElementById('vol-engine').value = this.engine;
+            document.getElementById('vol-sfx').value = this.sfx;
+        },
+        save() {
+            this.master = parseFloat(document.getElementById('vol-master').value);
+            this.bgm = parseFloat(document.getElementById('vol-bgm').value);
+            this.engine = parseFloat(document.getElementById('vol-engine').value);
+            this.sfx = parseFloat(document.getElementById('vol-sfx').value);
+            sessionStorage.setItem('racing_settings', JSON.stringify(this));
+        }
+    };
+
+    // 音頻引擎 v2 - 擬真合成
+    const AudioEngine = {
+        ctx: null, masterGain: null, bgmGain: null, engineGain: null, sfxGain: null,
+        p1Engine: null, p2Engine: null, isMuted: false,
+
+        init() {
+            if (this.ctx) return;
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.connect(this.ctx.destination);
+            
+            this.bgmGain = this.ctx.createGain();
+            this.bgmGain.connect(this.masterGain);
+            
+            this.engineGain = this.ctx.createGain();
+            this.engineGain.connect(this.masterGain);
+
+            this.sfxGain = this.ctx.createGain();
+            this.sfxGain.connect(this.masterGain);
+
+            this.p1Engine = this.createCarEngine();
+            this.p2Engine = this.createCarEngine();
+            this.createBGM();
+            this.updateLevels();
+        },
+
+        createCarEngine() {
+            // 擬真引擎需要多個諧波振盪器
+            const g = this.ctx.createGain();
+            g.connect(this.engineGain);
+            g.gain.value = 0;
+
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.Q.value = 5;
+            filter.connect(g);
+
+            // 主頻率 (鋸齒波)
+            const osc1 = this.ctx.createOscillator();
+            osc1.type = 'sawtooth';
+            osc1.connect(filter);
+            osc1.start();
+
+            // 子頻率 (方波增加粗糙感)
+            const osc2 = this.ctx.createOscillator();
+            osc2.type = 'square';
+            osc2.connect(filter);
+            osc2.start();
+
+            return { osc1, osc2, filter, gain: g };
+        },
+
+        updateEngine(engine, speed) {
+            if (!this.ctx) return;
+            const absSpeed = Math.abs(speed);
+            const baseFreq = 40 + absSpeed * 1.5 + Math.random() * 2; // 隨機震動
+            engine.osc1.frequency.setTargetAtTime(baseFreq, this.ctx.currentTime, 0.1);
+            engine.osc2.frequency.setTargetAtTime(baseFreq * 0.5, this.ctx.currentTime, 0.1);
+            
+            // 動態濾波器：轉速越高聲音越亮
+            engine.filter.frequency.setTargetAtTime(300 + absSpeed * 15, this.ctx.currentTime, 0.1);
+            
+            const vol = Math.min(0.8, absSpeed / 80);
+            engine.gain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
+        },
+
+        createBGM() {
+            const playBeat = () => {
+                if (!this.ctx || this.isMuted) return;
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                o.type = 'triangle';
+                o.frequency.setValueAtTime(55, this.ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.3);
+                g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+                o.connect(g); g.connect(this.bgmGain);
+                o.start(); o.stop(this.ctx.currentTime + 0.3);
+            };
+            setInterval(playBeat, 600);
+        },
+
+        playCollectSFX() {
+            if (!this.ctx || this.isMuted) return;
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(1200, this.ctx.currentTime);
+            o.frequency.exponentialRampToValueAtTime(2400, this.ctx.currentTime + 0.1);
+            g.gain.setValueAtTime(0.2, this.ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+            o.connect(g); g.connect(this.sfxGain);
+            o.start(); o.stop(this.ctx.currentTime + 0.2);
+        },
+
+        updateLevels() {
+            if (!this.masterGain) return;
+            const m = document.getElementById('vol-master').value;
+            this.masterGain.gain.setTargetAtTime(this.isMuted ? 0 : m, this.ctx.currentTime, 0.1);
+            this.bgmGain.gain.setTargetAtTime(document.getElementById('vol-bgm').value, this.ctx.currentTime, 0.1);
+            this.engineGain.gain.setTargetAtTime(document.getElementById('vol-engine').value, this.ctx.currentTime, 0.1);
+            this.sfxGain.gain.setTargetAtTime(document.getElementById('vol-sfx').value, this.ctx.currentTime, 0.1);
+        }
+    };
+
+    function updateAudioSettings() { AudioEngine.updateLevels(); }
+    function toggleMute() { AudioEngine.isMuted = !AudioEngine.isMuted; document.getElementById('audio-btn').innerText = AudioEngine.isMuted ? "🔇" : "🔊"; AudioEngine.updateLevels(); }
+    function openSettings() { document.getElementById('settings-overlay').style.display = 'flex'; }
+    function closeSettings() { document.getElementById('settings-overlay').style.display = 'none'; }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const splash = document.getElementById('splash-screen');
+        const menu = document.getElementById('start-menu');
+        setTimeout(() => {
+            splash.style.opacity = '0';
+            setTimeout(() => { splash.style.display = 'none'; menu.style.display = 'flex'; requestAnimationFrame(() => { menu.style.opacity = '1'; }); }, 500);
+        }, 3000);
+        if (isPE) setupMobileEvents();
+    });
+
+    function setupMobileEvents() {
+        const bind = (id, keyCode) => {
+            const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyCode] = true; });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyCode] = false; });
+        };
+        bind('btn-up', 'KeyW'); bind('btn-down', 'KeyS'); bind('btn-left', 'KeyA'); bind('btn-right', 'KeyD');
+    }
+
+    window.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Escape' && gameRunning) returnToMenu(); });
+    window.addEventListener('keyup', e => keys[e.code] = false);
+
+    function initUI() {
+        const p1G = document.getElementById('p1-colors'), p2G = document.getElementById('p2-colors');
+        p1G.innerHTML = ""; p2G.innerHTML = "";
+        COLORS.forEach((c, i) => {
+            p1G.appendChild(createDot(c, i === 0, (color) => { p1Color = color; updateDots(p1G, color); }));
+            p2G.appendChild(createDot(c, i === 1, (color) => { p2Color = color; updateDots(p2G, color); }));
+        });
+    }
+    function createDot(color, isActive, callback) {
+        const dot = document.createElement('div');
+        dot.className = `color-dot ${isActive ? 'active' : ''}`;
+        dot.style.backgroundColor = '#' + color.toString(16).padStart(6, '0');
+        dot.onclick = () => callback(color);
+        return dot;
+    }
+    function updateDots(container, color) {
+        container.querySelectorAll('.color-dot').forEach(d => {
+            const hex = hexToRgb(color);
+            d.className = d.style.backgroundColor === hex ? 'color-dot active' : 'color-dot';
+        });
+    }
+    function hexToRgb(hex) { const r = (hex >> 16) & 255, g = (hex >> 8) & 255, b = hex & 255; return `rgb(${r}, ${g}, ${b})`; }
+    initUI();
+
+    function setMode(m) {
+        gameMode = m;
+        document.getElementById('mode-1p').className = m === 1 ? 'btn active' : 'btn';
+        document.getElementById('mode-2p').className = m === 2 ? 'btn active' : 'btn';
+        document.getElementById('mode-spec').className = m === 3 ? 'btn active' : 'btn';
+    }
+    function setGoal(n) {
+        goalCount = n;
+        document.querySelectorAll('#diff-opts .btn').forEach(b => b.className = parseInt(b.innerText) === n ? 'btn active' : 'btn');
+    }
+
+    function init() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87ceeb);
+        scene.fog = new THREE.Fog(0x87ceeb, 500, 4500);
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.autoClear = false;
+        document.body.appendChild(renderer.domElement);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        const sun = new THREE.DirectionalLight(0xffffff, 1.0);
+        sun.position.set(500, 1000, 200);
+        scene.add(sun);
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), new THREE.MeshPhongMaterial({ color: 0x111111, shininess: 5 }));
+        ground.rotation.x = -Math.PI / 2;
+        scene.add(ground);
+        const grid = new THREE.GridHelper(10000, 100, 0x00d4ff, 0x222222);
+        grid.position.y = 0.05;
+        scene.add(grid);
+        const border = new THREE.Mesh(new THREE.RingGeometry(WORLD_LIMIT, WORLD_LIMIT + 30, 64), new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide }));
+        border.rotation.x = -Math.PI / 2;
+        border.position.y = 0.5;
+        scene.add(border);
+        createCheckpoints();
+        p1 = createCar(1, p1Color); p2 = createCar(2, p2Color); 
+        p1.pos.set(-80, 0, 0); p2.pos.set(80, 0, 0);
+        scene.add(p1.mesh); scene.add(p2.mesh);
+        document.getElementById('p1-arrow-path').setAttribute('fill', '#' + p1Color.toString(16).padStart(6,'0'));
+        document.getElementById('p2-arrow-path').setAttribute('fill', '#' + p2Color.toString(16).padStart(6,'0'));
+        window.addEventListener('resize', onWindowResize);
+    }
+
+    function createCheckpoints() {
+        checkpoints = []; const range = 3200;
+        const beamGeo = new THREE.CylinderGeometry(18, 18, 1200, 16);
+        const ringGeo = new THREE.RingGeometry(35, 65, 32);
+        for (let i = 0; i < goalCount; i++) {
+            const group = new THREE.Group();
+            const beam = new THREE.Mesh(beamGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 }));
+            beam.position.y = 600; group.add(beam);
+            const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+            ring.rotation.x = -Math.PI/2; ring.position.y = 1.5; group.add(ring);
+            group.position.set((Math.random()-0.5)*range*2, 0, (Math.random()-0.5)*range*2);
+            scene.add(group);
+            checkpoints.push({ mesh: group, beam, ring, pos: group.position.clone() });
+        }
+    }
+
+    function createCar(id, color) {
+        const group = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.0, 5.2), new THREE.MeshPhongMaterial({ color }));
+        body.position.y = 0.6; group.add(body);
+        const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.7, 2), new THREE.MeshPhongMaterial({ color: 0x000000 }));
+        cabin.position.set(0, 1.35, -0.25); group.add(cabin);
+        const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 5500);
+        return { id, mesh: group, camera, pos: new THREE.Vector3(), rot: 0, vel: 0, oobTimer: 0, targetIndex: 0, color: new THREE.Color(color), aiTargetRot: 0, aiNoiseSeed: Math.random() * 1000, mistakeTimer: 0, lastMistakeOffset: new THREE.Vector3() };
+    }
+
+    function updateAIInput(p, delta) {
+        if (p.targetIndex >= goalCount) return { up: false, down: false, left: false, right: false };
+        const target = checkpoints[p.targetIndex].pos;
+        const toTarget = target.clone().sub(p.pos);
+        const dist = toTarget.length();
+        p.mistakeTimer += delta;
+        if (p.mistakeTimer > 1.2) { p.mistakeTimer = 0; const errorScale = Math.min(1.0, dist / 1000) * 85; p.lastMistakeOffset.set((Math.random() - 0.5) * errorScale, 0, (Math.random() - 0.5) * errorScale); }
+        const time = clock.elapsedTime;
+        const perceivedTarget = target.clone().add(p.lastMistakeOffset).add(new THREE.Vector3(Math.sin(time*0.4)*40, 0, Math.cos(time*0.6)*40));
+        const idealRot = Math.atan2(perceivedTarget.x - p.pos.x, perceivedTarget.z - p.pos.z);
+        const forward = new THREE.Vector3(Math.sin(p.rot), 0, Math.cos(p.rot));
+        const dot = forward.dot(toTarget.clone().normalize());
+        p.aiTargetRot = THREE.MathUtils.lerp(p.aiTargetRot, idealRot, (dot < 0) ? 0.08 : (dist < 150 ? 0.07 : 0.04)); 
+        let rotDiff = p.aiTargetRot - p.rot; while(rotDiff > Math.PI) rotDiff -= Math.PI * 2; while(rotDiff < -Math.PI) rotDiff += Math.PI * 2;
+        const deadzone = 0.07;
+        let decelerate = (Math.abs(rotDiff) > 1.1 || dot < -0.4 || (dist < 150 && p.vel > 90));
+        return { up: !decelerate, down: decelerate, left: rotDiff > deadzone, right: rotDiff < -deadzone };
+    }
+
+    function updatePhysics(p, delta) {
+        if (isFinished || !gameRunning) return;
+        const isAI = (gameMode === 3) || (gameMode === 1 && p.id === 2);
+        let ctrl;
+        if (isAI) ctrl = updateAIInput(p, delta);
+        else ctrl = { up: p.id === 1 ? keys['KeyW'] : keys['ArrowUp'], down: p.id === 1 ? keys['KeyS'] : keys['ArrowDown'], left: p.id === 1 ? keys['KeyA'] : keys['ArrowLeft'], right: p.id === 1 ? keys['KeyD'] : keys['ArrowRight'] };
+
+        const accelPower = 1.8 * delta * 60;
+        if (ctrl.up) p.vel += accelPower; else if (ctrl.down) p.vel -= accelPower * 1.5; else p.vel *= 0.995;
+        const steerPower = 0.022 * (Math.min(1, Math.abs(p.vel) / 35) + 0.3);
+        if (ctrl.left) p.rot += steerPower; if (ctrl.right) p.rot -= steerPower;
+
+        p.pos.x += Math.sin(p.rot) * p.vel * delta * 2; p.pos.z += Math.cos(p.rot) * p.vel * delta * 2;
+        p.mesh.position.copy(p.pos); p.mesh.rotation.y = p.rot;
+
+        if (Math.abs(p.pos.x) > WORLD_LIMIT || Math.abs(p.pos.z) > WORLD_LIMIT) {
+            if (p.id === 1 && gameMode !== 3) {
+                document.getElementById('warning-box').style.display = 'block';
+                p.oobTimer += delta; document.getElementById('warn-timer').innerText = Math.ceil(3.1 - p.oobTimer);
+                if (p.oobTimer >= 3) { teleport(p); p.oobTimer = 0; }
+            } else teleport(p);
+        } else if (p.id === 1) { document.getElementById('warning-box').style.display = 'none'; p.oobTimer = 0; }
+
+        p.camera.fov = 70 + Math.min(45, (Math.abs(p.vel) / 250) * 45); p.camera.updateProjectionMatrix();
+        const camOff = new THREE.Vector3(-Math.sin(p.rot)*32, 16, -Math.cos(p.rot)*32);
+        p.camera.position.copy(p.pos).add(camOff); p.camera.lookAt(p.pos.clone().add(new THREE.Vector3(0, 3, 0)));
+        
+        const engine = p.id === 1 ? AudioEngine.p1Engine : AudioEngine.p2Engine;
+        if (engine) AudioEngine.updateEngine(engine, p.vel);
+        updateHUD(p); handleCollection(p);
+    }
+
+    function teleport(p) { p.pos.set((Math.random()-0.5)*WORLD_LIMIT*1.4, 0, (Math.random()-0.5)*WORLD_LIMIT*1.4); p.vel *= 0.1; p.aiTargetRot = p.rot; }
+
+    function updateHUD(p) {
+        document.getElementById(`p${p.id}-speed`).innerText = Math.round(Math.abs(p.vel * 5.2));
+        document.getElementById(`p${p.id}-collected`).innerText = p.targetIndex;
+        if (p.targetIndex < goalCount) {
+            const target = checkpoints[p.targetIndex].pos;
+            const arrow = document.querySelector(`#p${p.id}-nav svg`);
+            const targetAngle = Math.atan2(target.x - p.pos.x, target.z - p.pos.z);
+            arrow.style.transform = `rotate(${(targetAngle - p.rot) * (180/Math.PI)}deg)`;
+            const mapSize = isPE ? 120 : 180, scale = (mapSize * 0.8) / (WORLD_LIMIT * 2);
+            const setDot = (id, pos) => {
+                const el = document.getElementById(id); if (!el) return;
+                el.style.left = (pos.x * scale + mapSize/2) + 'px'; el.style.top = (pos.z * scale + mapSize/2) + 'px';
+            };
+            const other = p.id === 1 ? p2 : p1;
+            setDot(`p${p.id}-radar-self`, p.pos); setDot(`p${p.id}-radar-other`, other.pos); setDot(`p${p.id}-radar-target`, target);
+        }
+    }
+
+    function handleCollection(p) {
+        if (p.targetIndex >= goalCount) return;
+        if (p.pos.distanceTo(checkpoints[p.targetIndex].pos) < 75) {
+            p.targetIndex++; AudioEngine.playCollectSFX();
+            if (p.targetIndex >= goalCount) checkEnd();
+        }
+    }
+
+    function checkEnd() {
+        if (isFinished) return; isFinished = true;
+        const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
+        document.getElementById('win-screen').style.display = 'flex';
+        let winName = (gameMode === 3) ? (p1.targetIndex >= goalCount ? "AI 1 獲勝" : "AI 2 獲勝") : (p1.targetIndex >= goalCount ? "玩家 1 獲勝" : (gameMode === 1 ? "模仿型 AI 獲勝" : "玩家 2 獲勝"));
+        document.getElementById('win-title').innerText = winName;
+        document.getElementById('win-msg').innerText = `最終戰績統計：\n玩家 1 得分：${p1.targetIndex}\n競爭者得分：${p2.targetIndex}\n全程耗時：${totalTime} 秒`;
+    }
+
+    function updateVisualsForViewport(viewer, other) {
+        checkpoints.forEach((cp, idx) => {
+            const oDone = (idx < other.targetIndex);
+            cp.mesh.visible = (idx === viewer.targetIndex);
+            if (cp.mesh.visible) {
+                const mixColor = new THREE.Color().copy(viewer.color).lerp(other.color, 0.5);
+                if (oDone) { cp.beam.material.color.copy(other.color); cp.ring.material.color.copy(other.color); }
+                else if (idx === other.targetIndex) { cp.beam.material.color.copy(mixColor); cp.ring.material.color.copy(mixColor); }
+                else { cp.beam.material.color.copy(viewer.color); cp.ring.material.color.copy(viewer.color); }
+            }
+        });
+    }
+
+    function animate() {
+        if (!gameRunning) return;
+        requestAnimationFrame(animate);
+        const delta = clock.getDelta();
+        updatePhysics(p1, delta); updatePhysics(p2, delta);
+        const w = window.innerWidth, h = window.innerHeight;
+        const isSplit = gameMode === 2 || gameMode === 3;
+        if (isSplit) {
+            updateVisualsForViewport(p1, p2); renderer.setViewport(0, 0, w/2, h); renderer.setScissor(0, 0, w/2, h); renderer.setScissorTest(true); renderer.render(scene, p1.camera);
+            updateVisualsForViewport(p2, p1); renderer.setViewport(w/2, 0, w/2, h); renderer.setScissor(w/2, 0, w/2, h); renderer.setScissorTest(true); renderer.render(scene, p2.camera);
+        } else {
+            updateVisualsForViewport(p1, p2); renderer.setViewport(0, 0, w, h); renderer.setScissorTest(false); renderer.render(scene, p1.camera);
+        }
+    }
+
+    function startGame() {
+        AudioEngine.init();
+        const menu = document.getElementById('start-menu');
+        menu.style.opacity = '0';
+        setTimeout(() => {
+            menu.style.display = 'none';
+            const huds = ['p1-hud', 'p2-hud', 'p1-nav', 'p2-nav', 'p1-radar-ui', 'p2-radar-ui', 'esc-ui-tip', 'divider', 'audio-btn', 'settings-btn'];
+            huds.forEach(id => {
+                const el = document.getElementById(id); if (!el) return;
+                if (gameMode !== 1 && id.includes('p2')) el.style.display = 'block';
+                else if (id.includes('p1') || id === 'esc-ui-tip' || id === 'divider' || id.includes('btn')) {
+                    if (id === 'divider' && gameMode === 1) return;
+                    el.style.display = 'block';
+                }
+                requestAnimationFrame(() => { el.style.opacity = '1'; });
+            });
+            if (isPE && gameMode !== 3) {
+                const mc = document.getElementById('mobile-controls'); mc.style.display = 'flex';
+                requestAnimationFrame(() => { mc.style.opacity = '1'; });
+            }
+            document.getElementById('p1-total').innerText = goalCount; document.getElementById('p2-total').innerText = goalCount;
+            isFinished = false; startTime = Date.now();
+            init(); gameRunning = true; animate();
+        }, 500);
+    }
+
+    function returnToMenu() { location.reload(); }
+    function onWindowResize() {
+        if (!renderer || !p1) return;
+        const w = window.innerWidth, h = window.innerHeight;
+        renderer.setSize(w, h);
+        const isSplit = gameMode !== 1;
+        p1.camera.aspect = (isSplit ? w/2 : w) / h; p1.camera.updateProjectionMatrix();
+        p2.camera.aspect = (w/2) / h; p2.camera.updateProjectionMatrix();
+    }
+</script>
+</body>
+</html>
