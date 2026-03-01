@@ -562,9 +562,11 @@
                 }
                 requestAnimationFrame(() => el.style.opacity = '1');
             });
-            // 核心修復：同步選單設定的核心數量到遊戲 HUD
+            // 核心修復：同步選單設定的核心數量到遊戲 HUD 並重置時速顯示
             document.getElementById('p1-total').innerText = goalCount;
             document.getElementById('p2-total').innerText = goalCount;
+            document.getElementById('p1-speed').innerText = '0';
+            document.getElementById('p2-speed').innerText = '0';
             
             isFinished = false; startTime = Date.now();
             initGame(); gameRunning = true; animate();
@@ -573,6 +575,9 @@
 
     function returnToMenu() {
         gameRunning = false;
+        // 清除按鍵緩存，防止下一局速度沒從 0 開始
+        for (let k in keys) delete keys[k];
+        
         if (renderer) {
             renderer.domElement.parentNode && renderer.domElement.parentNode.removeChild(renderer.domElement);
             renderer.dispose();
