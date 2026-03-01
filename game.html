@@ -6,14 +6,35 @@
     <title>3D 極速無極限 - 能量競技場</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
+        /* 核心美學變量 */
         :root {
             --primary: #00d4ff;
             --accent: #ff007f;
             --warning: #ffcc00;
+            /* 預設為深色模式變量 */
+            --bg-overlay: radial-gradient(circle at center, rgba(0,212,255,0.05) 0%, rgba(0,0,0,0.95) 100%);
+            --card-bg: rgba(15, 15, 15, 0.85);
             --glass: rgba(255, 255, 255, 0.08);
             --glass-active: rgba(255, 255, 255, 0.15);
+            --text-main: #ffffff;
+            --text-dim: #888888;
+            --card-border: rgba(255, 255, 255, 0.1);
+            --touch-bg: rgba(255, 255, 255, 0.1);
         }
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; background: #000; color: #fff; touch-action: none; }
+
+        /* 明亮模式變量 - 優化按鈕能見度 */
+        body.theme-light {
+            --bg-overlay: radial-gradient(circle at center, rgba(255,255,255,0.9) 0%, rgba(220,230,240,0.95) 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --glass: rgba(0, 0, 0, 0.08); /* 稍微加深 */
+            --glass-active: rgba(0, 0, 0, 0.15);
+            --text-main: #111111;
+            --text-dim: #555555;
+            --card-border: rgba(0, 0, 0, 0.15);
+            --touch-bg: rgba(0, 0, 0, 0.12); /* 行動端按鍵在亮色下更明顯 */
+        }
+
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif; background: #000; color: var(--text-main); touch-action: none; transition: background 0.5s, color 0.5s; }
         canvas { display: block; }
         
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -27,13 +48,13 @@
         }
         .splash-content { text-align: center; }
         .splash-text {
-            font-size: 1.1rem; font-weight: 300; letter-spacing: 4px; color: #666;
+            font-size: 1.1rem; font-weight: 300; letter-spacing: 6px; color: #555;
             opacity: 0; animation: fadeInOut 3s forwards; text-transform: uppercase;
         }
         .splash-brand {
-            font-size: 2.2rem; font-weight: 900; color: #fff; margin-top: 10px;
+            font-size: 2.2rem; font-weight: 900; color: #fff; margin-top: 12px;
             opacity: 0; animation: fadeInOut 3s forwards; animation-delay: 0.2s;
-            text-shadow: 0 0 25px rgba(255,255,255,0.4);
+            text-shadow: 0 0 30px rgba(0,212,255,0.5);
         }
         @keyframes fadeInOut {
             0% { opacity: 0; transform: translateY(10px); }
@@ -42,204 +63,225 @@
             100% { opacity: 0; transform: translateY(-10px); }
         }
 
-        /* 選單與覆蓋層 */
+        /* 通用選單樣式 */
         .overlay { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: radial-gradient(circle at center, rgba(0,212,255,0.1) 0%, rgba(0,0,0,0.9) 100%);
+            background: var(--bg-overlay);
             display: flex; flex-direction: column; 
             justify-content: center; align-items: center; pointer-events: auto; z-index: 100;
-            backdrop-filter: blur(15px);
-            transition: opacity 0.4s ease-out;
+            backdrop-filter: blur(20px);
+            transition: opacity 0.4s ease-out, background 0.5s;
         }
         .menu-card { 
-            background: rgba(10, 10, 10, 0.85); padding: 35px; border-radius: 40px; 
-            box-shadow: 0 0 60px rgba(0,212,255,0.15); text-align: center; 
-            max-width: 600px; width: 85%; border: 1px solid rgba(255,255,255,0.05);
-            max-height: 90vh; overflow-y: auto;
+            background: var(--card-bg); padding: 45px; border-radius: 40px; 
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2); text-align: center; 
+            max-width: 600px; width: 85%; border: 1px solid var(--card-border);
+            max-height: 90vh; overflow-y: auto; position: relative;
+            animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        h1 { font-size: 2.8rem; margin: 0; color: #fff; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; }
-        h1 span { color: var(--primary); }
-        .section-label { margin: 18px 0 10px; font-weight: 700; color: #666; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 2px; }
-        .options-group { margin-bottom: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        h1 { font-size: 3rem; margin: 0; color: var(--text-main); font-weight: 900; text-transform: uppercase; letter-spacing: -2px; line-height: 1; }
+        h1 span { color: var(--primary); text-shadow: 0 0 20px rgba(0,212,255,0.4); }
+        
+        .section-label { margin: 25px 0 12px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 3px; }
+        .options-group { margin-bottom: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        
         .btn { 
-            background: var(--glass); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 12px 24px; 
-            cursor: pointer; border-radius: 15px; transition: 0.2s; font-size: 0.9rem;
+            background: var(--glass); color: var(--text-main); border: 1px solid var(--card-border); padding: 14px 28px; 
+            cursor: pointer; border-radius: 18px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.9rem; font-weight: 600;
         }
-        .btn:hover { background: var(--glass-active); border-color: var(--primary); }
-        .btn.active { background: var(--primary); color: #000; font-weight: 800; border-color: #fff; box-shadow: 0 0 15px var(--primary); }
-        .color-dot { width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s; }
-        .color-dot.active { border-color: white; transform: scale(1.25); box-shadow: 0 0 20px var(--primary); }
-        .start-btn { background: #fff; color: #000; padding: 18px 70px; font-size: 1.4rem; border: none; border-radius: 50px; cursor: pointer; margin-top: 25px; font-weight: 900; transition: 0.3s; }
-        .start-btn:hover { background: var(--primary); transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,212,255,0.3); }
+        .btn:hover { background: var(--glass-active); transform: translateY(-2px); border-color: var(--primary); }
+        .btn.active { background: var(--primary); color: #000; font-weight: 800; border-color: #fff; box-shadow: 0 8px 20px rgba(0,212,255,0.4); }
+        
+        .color-dot { width: 34px; height: 34px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s; }
+        .color-dot.active { border-color: var(--text-main); transform: scale(1.2) rotate(15deg); box-shadow: 0 0 20px var(--primary); }
+        
+        .start-btn { 
+            background: var(--text-main); color: var(--card-bg); padding: 20px 80px; font-size: 1.5rem; 
+            border: none; border-radius: 100px; cursor: pointer; margin-top: 35px; font-weight: 900; 
+            transition: all 0.4s; letter-spacing: 1px;
+        }
+        .start-btn:hover { background: var(--primary); color: #000; transform: translateY(-4px) scale(1.02); box-shadow: 0 15px 30px rgba(0,212,255,0.4); }
 
-        /* 設定介面 */
+        .version-tag { position: absolute; bottom: 15px; right: 30px; font-size: 0.7rem; color: var(--text-dim); font-weight: 900; opacity: 0.5; }
+
+        /* 設定視窗微調 */
         #settings-overlay { display: none; z-index: 1200; }
-        .settings-card { width: 380px; }
-        .setting-row { margin-bottom: 20px; width: 100%; }
-        .setting-row label { display: block; font-size: 0.7rem; color: #888; margin-bottom: 8px; text-transform: uppercase; text-align: left; }
+        .setting-row { margin-bottom: 22px; width: 100%; }
+        .setting-row label { display: block; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 10px; text-transform: uppercase; text-align: left; font-weight: 700; }
         .slider-container { display: flex; align-items: center; width: 100%; }
-        input[type="range"] { flex: 1; -webkit-appearance: none; background: rgba(255,255,255,0.1); height: 4px; border-radius: 2px; outline: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: var(--primary); border-radius: 50%; cursor: pointer; border: 2px solid #fff; }
+        input[type="range"] { flex: 1; -webkit-appearance: none; background: var(--glass); height: 6px; border-radius: 10px; outline: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: var(--primary); border-radius: 50%; cursor: pointer; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
-        /* HUD 組件 */
-        .hud-element { opacity: 0; transition: opacity 0.8s ease-in; position: absolute; pointer-events: none; }
-        .player-hud { bottom: 30px; display: flex; flex-direction: column; gap: 8px; }
+        /* HUD 組件佈局 */
+        .hud-element { opacity: 0; transition: opacity 0.8s ease-in, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); position: absolute; pointer-events: none; }
+        
+        /* 預設 PC 單人佈局 - 分散地圖與羅盤 */
+        .radar { top: 25px; left: 25px; width: 180px; height: 180px; background: rgba(0,0,0,0.5); border: 1px solid var(--card-border); border-radius: 24px; overflow: hidden; backdrop-filter: blur(10px); }
+        .compass { top: 25px; right: 25px; width: 80px; height: 80px; }
+
+        /* PC 雙人模式（非 mode-1p）佈局優化 */
+        body.pc-mode:not(.mode-1p) .p1-radar { top: 25px; left: 25px; }
+        body.pc-mode:not(.mode-1p) .p1-compass { top: 25px; left: calc(50% - 105px); right: auto; }
+        body.pc-mode:not(.mode-1p) .p2-radar { top: 25px; right: 25px; left: auto; }
+        body.pc-mode:not(.mode-1p) .p2-compass { top: 25px; right: calc(50% - 105px); left: auto; }
+
+        .player-hud { bottom: 35px; display: flex; flex-direction: column; gap: 10px; }
         .p1-hud { left: 40px; }
         .p2-hud { right: 40px; text-align: right; }
-        .panel { background: rgba(0,0,0,0.7); padding: 12px 20px; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .speed-val { font-size: 2.8rem; font-weight: 900; color: var(--primary); line-height: 1; }
-        .obj-count { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
+        
+        .panel { background: rgba(0,0,0,0.6); padding: 15px 25px; border-radius: 25px; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .speed-val { font-size: 3rem; font-weight: 900; color: var(--primary); line-height: 0.9; font-variant-numeric: tabular-nums; }
+        .obj-count { font-size: 2rem; font-weight: 900; color: var(--accent); }
 
-        .compass { top: 30px; width: 70px; height: 70px; }
-        .p1-compass { left: 25%; transform: translateX(-50%); }
-        .p2-compass { right: 25%; transform: translateX(50%); }
-        .compass svg { width: 100%; height: 100%; filter: drop-shadow(0 0 10px var(--accent)); }
-
-        .radar { top: 20px; width: 170px; height: 170px; background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.15); border-radius: 15px; overflow: hidden; backdrop-filter: blur(5px); }
-        .p1-radar { left: 20px; }
-        .p2-radar { right: 20px; }
-        .radar-dot { position: absolute; width: 7px; height: 7px; border-radius: 50%; transform: translate(-50%, -50%); }
-        .radar-dot.self { background: var(--primary); z-index: 5; box-shadow: 0 0 8px var(--primary); }
+        .compass svg { width: 100%; height: 100%; filter: drop-shadow(0 0 12px var(--accent)); }
+        .radar-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); }
+        .radar-dot.self { background: var(--primary); z-index: 5; box-shadow: 0 0 12px var(--primary); }
         .radar-dot.other { background: var(--accent); z-index: 4; }
-        .radar-dot.target { background: #fff; z-index: 3; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.8); opacity: 0.5; } 100% { transform: translate(-50%, -50%) scale(1); } }
+        .radar-dot.target { background: #fff; z-index: 3; animation: pulse 1.2s infinite; }
 
         /* 功能按鈕 */
-        .icon-btn { position: absolute; top: 15px; width: 44px; height: 44px; background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; pointer-events: auto; border: 1px solid rgba(255,255,255,0.1); z-index: 800; opacity: 0; transition: 0.3s; font-size: 1.2rem; }
-        #settings-btn { right: 15px; }
-        #audio-btn { right: 70px; }
-        .icon-btn:hover { background: var(--glass-active); transform: scale(1.1); }
+        .icon-btn { position: absolute; top: 25px; width: 48px; height: 48px; background: rgba(0,0,0,0.5); border-radius: 16px; display: flex; justify-content: center; align-items: center; cursor: pointer; pointer-events: auto; border: 1px solid var(--card-border); z-index: 800; opacity: 0; transition: all 0.3s; font-size: 1.4rem; }
+        #audio-btn { left: 50%; transform: translateX(-55px); }
+        #settings-btn { left: 50%; transform: translateX(5px); }
 
-        /* PE 模式優化 */
-        body.pe-mode .radar { width: 110px; height: 110px; top: 10px; border-radius: 10px; }
-        body.pe-mode .compass { width: 45px; height: 45px; top: 10px; }
-        body.pe-mode .player-hud { bottom: auto; top: 80px; }
-        body.pe-mode .panel { padding: 6px 12px; }
-        body.pe-mode .speed-val { font-size: 1.4rem; }
-        body.pe-mode .obj-count { font-size: 1.1rem; }
-        body.pe-mode .settings-card { width: 90%; }
-        body.pe-mode input[type="range"]::-webkit-slider-thumb { width: 26px; height: 26px; }
+        /* PE 模式佈局覆寫 */
+        body.pe-mode .radar { width: 120px; height: 120px; top: 15px; left: 15px; border-radius: 15px; }
+        body.pe-mode .compass { width: 50px; height: 50px; top: 15px; right: 15px; left: auto; }
+        body.pe-mode .player-hud { bottom: auto; top: 150px; }
+        body.pe-mode .p1-hud { left: 15px; }
+        body.pe-mode .p2-hud { right: 15px; }
+        body.pe-mode .icon-btn { top: auto; bottom: 210px; width: 40px; height: 40px; }
+        
+        /* PE 控制項與防止 1P 雙 Gas */
+        .mobile-controls-wrapper { position: absolute; bottom: 30px; width: 100%; height: 160px; display: none; justify-content: space-between; padding: 0 15px; box-sizing: border-box; z-index: 500; opacity: 0; transition: opacity 0.8s; pointer-events: none; }
+        .ctrl-group { display: flex; gap: 10px; align-items: flex-end; pointer-events: auto; }
+        .touch-btn { width: 60px; height: 60px; background: var(--touch-bg); border: 1px solid var(--card-border); border-radius: 20px; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 1.2rem; color: var(--text-main); user-select: none; -webkit-tap-highlight-color: transparent; backdrop-filter: blur(10px); transition: 0.1s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .touch-btn:active { background: var(--primary); color: #000; transform: scale(0.85); box-shadow: 0 0 20px var(--primary); }
+        .touch-btn.accel { background: rgba(0,212,255,0.2); height: 80px; width: 80px; border-color: var(--primary); }
 
-        /* PE 控制項修正 */
-        .mobile-controls-wrapper {
-            position: absolute; bottom: 30px; width: 100%; height: 160px;
-            display: none; justify-content: space-between; padding: 0 10px; box-sizing: border-box;
-            z-index: 500; opacity: 0; transition: opacity 0.8s; pointer-events: none;
-        }
-        .ctrl-group { display: flex; gap: 8px; align-items: flex-end; pointer-events: auto; }
-        .touch-btn { 
-            width: 55px; height: 55px; background: rgba(255,255,255,0.08); 
-            border: 2px solid rgba(255,255,255,0.15); border-radius: 50%; 
-            display: flex; justify-content: center; align-items: center; 
-            font-weight: 900; font-size: 1rem; color: rgba(255,255,255,0.4); 
-            user-select: none; -webkit-tap-highlight-color: transparent; 
-            backdrop-filter: blur(8px); transition: transform 0.1s; 
-        }
-        .touch-btn:active { background: var(--primary); color: #000; border-color: #fff; transform: scale(0.8); }
-        .touch-btn.accel { background: rgba(0,212,255,0.15); height: 75px; width: 75px; color: #fff; border-color: var(--primary); }
+        /* 1P 模式下強制隱藏 P2 控制組 */
+        body.mode-1p .ctrl-p2 { display: none !important; }
+        body.mode-1p .mobile-controls-wrapper { justify-content: space-around; padding: 0 30px; }
 
-        body.pe-mode.mode-1p .ctrl-p2 { display: none; }
-        body.pe-mode.mode-1p .mobile-controls-wrapper { padding: 0 25px; }
-
-        #warning-box { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 0, 0, 0.7); color: white; padding: 12px 24px; border-radius: 10px; font-weight: bold; display: none; z-index: 1000; border: 2px solid white; text-align: center; }
-        .esc-tip { left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: #444; }
-        .divider { left: 50%; top: 0; width: 2px; height: 100%; background: rgba(255,255,255,0.2); transform: translateX(-50%); display: none; }
+        #warning-box { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 0, 0, 0.8); color: white; padding: 15px 30px; border-radius: 20px; font-weight: 900; display: none; z-index: 1000; border: 2px solid white; text-align: center; box-shadow: 0 0 40px rgba(255,0,0,0.5); }
+        .esc-tip { left: 50%; transform: translateX(-50%); font-size: 0.75rem; color: var(--text-dim); top: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .divider { left: 50%; top: 0; width: 2px; height: 100%; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.3), transparent); transform: translateX(-50%); display: none; }
     </style>
 </head>
-<body class="pc-mode">
+<body class="pc-mode mode-1p"> <!-- 預設為 1P 類別 -->
 
 <div id="ui-layer">
+    <!-- 啟動畫面 -->
     <div id="splash-screen">
         <div class="splash-content">
-            <div class="splash-text">A Game Experience</div>
+            <div class="splash-text">A High Performance Experience</div>
             <div class="splash-brand">Produced by JSCZ International Group</div>
         </div>
     </div>
 
+    <!-- 主選單 -->
     <div id="start-menu" class="overlay" style="display: none; opacity: 0;">
         <div class="menu-card">
             <h1>SPEED <span>ARENA</span></h1>
-            <p style="color: #666; font-size: 0.85rem; margin-top:5px;">仿生 AI 競技 | 跨端優化引擎</p>
+            <p style="color: var(--text-dim); font-size: 0.85rem; margin-top:8px; font-weight: 600;">ADVANCED AI MIMICRY | MULTI-PLATFORM ENGINE</p>
             
-            <div class="section-label">競賽模式</div>
+            <div class="section-label">RACE MODE</div>
             <div class="options-group">
                 <button class="btn active" id="mode-1p" onclick="setMode(1)">人機競速</button>
                 <button class="btn" id="mode-2p" onclick="setMode(2)">雙人對決</button>
                 <button class="btn" id="mode-spec" onclick="setMode(3)">巔峰觀賽</button>
             </div>
 
-            <div style="display: flex; justify-content: center; gap: 30px; margin-top: 10px;">
-                <div id="p1-color-section">
-                    <div class="section-label" id="p1-label">玩家 1 顏色</div>
+            <div style="display: flex; justify-content: center; gap: 40px; margin-top: 15px;">
+                <div>
+                    <div class="section-label">P1 COLOR</div>
                     <div class="options-group" id="p1-colors"></div>
                 </div>
                 <div>
-                    <div class="section-label" id="p2-label">玩家 2 / AI 顏色</div>
+                    <div class="section-label" id="p2-label">P2/AI COLOR</div>
                     <div class="options-group" id="p2-colors"></div>
                 </div>
             </div>
 
-            <div class="section-label">核心數量</div>
+            <div class="section-label">GOAL TARGET</div>
             <div class="options-group" id="diff-opts">
-                <button class="btn" onclick="setGoal(5)">5</button>
-                <button class="btn active" onclick="setGoal(10)">10</button>
-                <button class="btn" onclick="setGoal(20)">20</button>
+                <button class="btn" onclick="setGoal(5)">5 核心</button>
+                <button class="btn active" onclick="setGoal(10)">10 核心</button>
+                <button class="btn" onclick="setGoal(20)">20 核心</button>
             </div>
 
             <button class="start-btn" onclick="startGame()">ENTER WORLD</button>
-            <div style="margin-top:15px;"><button class="btn" style="padding: 8px 20px; font-size: 0.8rem;" onclick="openSettings()">遊戲設定</button></div>
+            <div style="margin-top:15px;"><button class="btn" style="padding: 10px 30px; font-size: 0.8rem; opacity: 0.8;" onclick="openSettings()">遊戲設定</button></div>
+            
+            <div class="version-tag">Beta 2.0</div>
         </div>
     </div>
 
+    <!-- 設定視窗 -->
     <div id="settings-overlay" class="overlay">
         <div class="menu-card settings-card">
-            <h2 style="margin-top:0; letter-spacing: 2px;">SETTINGS</h2>
+            <h2 style="margin-top:0; letter-spacing: 4px; font-weight: 900;">SETTINGS</h2>
+            
+            <div class="setting-row">
+                <label>介面主題 Theme Mode</label>
+                <div class="options-group">
+                    <button class="btn active" id="theme-dark-btn" onclick="setTheme('dark')">深色霓虹</button>
+                    <button class="btn" id="theme-light-btn" onclick="setTheme('light')">清爽明亮</button>
+                </div>
+            </div>
+
             <div class="setting-row">
                 <label>主音量 Master Volume</label>
                 <div class="slider-container"><input type="range" id="vol-master" min="0" max="1" step="0.01" value="0.8" oninput="updateAudioSettings()"></div>
             </div>
             <div class="setting-row">
-                <label>背景音樂 BGM</label>
-                <div class="slider-container"><input type="range" id="vol-bgm" min="0" max="1" step="0.01" value="0.3" oninput="updateAudioSettings()"></div>
-            </div>
-            <div class="setting-row">
-                <label>引擎效應 Engine Power</label>
+                <label>引擎音效 Engine</label>
                 <div class="slider-container"><input type="range" id="vol-engine" min="0" max="1" step="0.01" value="0.5" oninput="updateAudioSettings()"></div>
             </div>
             <div class="setting-row">
-                <label>環境特效 SFX</label>
-                <div class="slider-container"><input type="range" id="vol-sfx" min="0" max="1" step="0.01" value="0.6" oninput="updateAudioSettings()"></div>
+                <label>環境音樂 BGM</label>
+                <div class="slider-container"><input type="range" id="vol-bgm" min="0" max="1" step="0.01" value="0.3" oninput="updateAudioSettings()"></div>
             </div>
-            <button class="start-btn" style="padding:10px 40px; font-size:1rem; margin-top:10px;" onclick="closeSettings()">套用並返回</button>
+            
+            <button class="start-btn" style="padding:15px 50px; font-size:1.1rem; margin-top:10px;" onclick="closeSettings()">完成</button>
         </div>
     </div>
 
-    <div id="settings-btn" class="icon-btn hud-element" onclick="openSettings()">⚙️</div>
+    <!-- 頂部功能區 -->
     <div id="audio-btn" class="icon-btn hud-element" onclick="toggleMute()">🔊</div>
+    <div id="settings-btn" class="icon-btn hud-element" onclick="openSettings()">⚙️</div>
 
+    <!-- 結算畫面 -->
     <div id="win-screen" class="overlay" style="display: none;">
         <div class="menu-card">
-            <h1 id="win-title">FINISH</h1>
-            <p id="win-msg" style="margin: 20px 0; font-size: 1.1rem; white-space: pre-wrap; line-height: 1.6;"></p>
+            <h1 id="win-title">RACE FINISHED</h1>
+            <p id="win-msg" style="margin: 25px 0; font-size: 1.15rem; white-space: pre-wrap; line-height: 1.8; color: var(--text-dim);"></p>
             <button class="start-btn" onclick="returnToMenu()">返回主選單</button>
         </div>
     </div>
 
-    <div id="p1-nav" class="compass p1-compass hud-element"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" /><path d="M50 10 L65 45 L50 38 L35 45 Z" id="p1-arrow-path" /></svg></div>
-    <div id="p2-nav" class="compass p2-compass hud-element"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" /><path d="M50 10 L65 45 L50 38 L35 45 Z" id="p2-arrow-path" /></svg></div>
+    <!-- HUD 核心元素 -->
+    <div id="p1-nav" class="compass p1-compass hud-element"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.1" /><path d="M50 10 L65 45 L50 38 L35 45 Z" id="p1-arrow-path" /></svg></div>
+    <div id="p2-nav" class="compass p2-compass hud-element"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.1" /><path d="M50 10 L65 45 L50 38 L35 45 Z" id="p2-arrow-path" /></svg></div>
 
     <div id="p1-radar-ui" class="radar p1-radar hud-element"><div id="p1-radar-target" class="radar-dot target"></div><div id="p1-radar-other" class="radar-dot other"></div><div id="p1-radar-self" class="radar-dot self"></div></div>
     <div id="p2-radar-ui" class="radar p2-radar hud-element"><div id="p2-radar-target" class="radar-dot target"></div><div id="p2-radar-other" class="radar-dot other"></div><div id="p2-radar-self" class="radar-dot self"></div></div>
 
     <div id="p1-hud" class="player-hud p1-hud hud-element">
-        <div class="panel"><div class="speed-val" id="p1-speed">0</div><div style="font-size:0.6rem; opacity:0.6;">P1 KM/H</div></div>
+        <div class="panel"><div class="speed-val" id="p1-speed">0</div><div style="font-size:0.6rem; opacity:0.6; font-weight: 800; letter-spacing: 1px;">KM/H</div></div>
         <div class="panel"><div class="obj-count"><span id="p1-collected">0</span> / <span id="p1-total">10</span></div></div>
     </div>
     <div id="p2-hud" class="player-hud p2-hud hud-element">
-        <div class="panel"><div class="speed-val" id="p2-speed">0</div><div style="font-size:0.6rem; opacity:0.6;">P2/AI KM/H</div></div>
+        <div class="panel"><div class="speed-val" id="p2-speed">0</div><div style="font-size:0.6rem; opacity:0.6; font-weight: 800; letter-spacing: 1px;">P2 KM/H</div></div>
         <div class="panel"><div class="obj-count"><span id="p2-collected">0</span> / <span id="p2-total">10</span></div></div>
     </div>
 
+    <!-- PE 控制區 -->
     <div id="mobile-controls-wrapper" class="mobile-controls-wrapper hud-element">
         <div class="ctrl-p1" style="display: flex; gap: 40px;">
             <div class="ctrl-group"><div class="touch-btn" id="p1-btn-left">←</div><div class="touch-btn" id="p1-btn-right">→</div></div>
@@ -251,49 +293,66 @@
         </div>
     </div>
 
-    <div id="warning-box"><div>⚠️ 超越邊界 ⚠️</div><div id="warn-timer">3</div> 秒後自動回傳</div>
+    <div id="warning-box"><div>⚠️ 邊界警報 ⚠️</div><div id="warn-timer">3</div> 秒後強制回傳</div>
     <div id="divider" class="divider hud-element"></div>
-    <div class="esc-tip hud-element" id="esc-ui-tip">按下 ESC 退出賽局</div>
+    <div class="esc-tip hud-element" id="esc-ui-tip">按下 ESC 返回選單</div>
 </div>
 
 <script>
+    // 常數
     const COLORS = [0x00d4ff, 0xff007f, 0x00ff7f, 0xffcc00, 0xffffff, 0x8800ff];
     const WORLD_LIMIT = 4500;
 
+    // 全域狀態
     let scene, renderer, clock = new THREE.Clock();
     let p1, p2, checkpoints = [];
     let gameMode = 1, goalCount = 10, p1Color = COLORS[0], p2Color = COLORS[1];
     let gameRunning = false, isFinished = false, startTime = 0;
     const keys = {};
 
+    // 裝置偵測
     const isPE = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window);
     if (isPE) document.body.classList.replace('pc-mode', 'pe-mode');
 
+    // 設置與主題管理
     const PersistedSettings = {
-        master: 0.8, bgm: 0.3, engine: 0.5, sfx: 0.6, muted: false,
+        master: 0.8, bgm: 0.3, engine: 0.5, sfx: 0.6, muted: false, theme: 'dark',
         load() {
-            const data = JSON.parse(sessionStorage.getItem('racing_settings') || '{}');
+            const data = JSON.parse(sessionStorage.getItem('racing_settings_v3') || '{}');
             if (data.master !== undefined) this.master = data.master;
             if (data.bgm !== undefined) this.bgm = data.bgm;
             if (data.engine !== undefined) this.engine = data.engine;
-            if (data.sfx !== undefined) this.sfx = data.sfx;
+            if (data.theme !== undefined) this.theme = data.theme;
             if (data.muted !== undefined) this.muted = data.muted;
+            
             document.getElementById('vol-master').value = this.master;
             document.getElementById('vol-bgm').value = this.bgm;
             document.getElementById('vol-engine').value = this.engine;
-            document.getElementById('vol-sfx').value = this.sfx;
+            setTheme(this.theme, false);
         },
         save() {
             this.master = parseFloat(document.getElementById('vol-master').value);
             this.bgm = parseFloat(document.getElementById('vol-bgm').value);
             this.engine = parseFloat(document.getElementById('vol-engine').value);
-            this.sfx = parseFloat(document.getElementById('vol-sfx').value);
-            sessionStorage.setItem('racing_settings', JSON.stringify(this));
+            sessionStorage.setItem('racing_settings', JSON.stringify(this)); // 修正存檔 Key
+            sessionStorage.setItem('racing_settings_v3', JSON.stringify(this));
         }
     };
 
+    function setTheme(t, shouldSave = true) {
+        PersistedSettings.theme = t;
+        if (t === 'light') document.body.classList.add('theme-light');
+        else document.body.classList.remove('theme-light');
+        
+        document.getElementById('theme-dark-btn').classList.toggle('active', t === 'dark');
+        document.getElementById('theme-light-btn').classList.toggle('active', t === 'light');
+        
+        if (shouldSave) PersistedSettings.save();
+    }
+
+    // 音頻引擎
     const AudioEngine = {
-        ctx: null, masterGain: null, bgmGain: null, engineGain: null, sfxGain: null,
+        ctx: null, masterGain: null, bgmGain: null, engineGain: null,
         p1Engine: null, p2Engine: null,
         init() {
             if (this.ctx) return;
@@ -301,7 +360,6 @@
             this.masterGain = this.ctx.createGain(); this.masterGain.connect(this.ctx.destination);
             this.bgmGain = this.ctx.createGain(); this.bgmGain.connect(this.masterGain);
             this.engineGain = this.ctx.createGain(); this.engineGain.connect(this.masterGain);
-            this.sfxGain = this.ctx.createGain(); this.sfxGain.connect(this.masterGain);
             this.p1Engine = this.createCarEngine(); this.p2Engine = this.createCarEngine();
             this.createBGM(); this.applySettings();
         },
@@ -310,9 +368,6 @@
             const filter = this.ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.Q.value = 8; filter.connect(group);
             const osc1 = this.ctx.createOscillator(); osc1.type = 'sawtooth'; osc1.connect(filter); osc1.start();
             const osc2 = this.ctx.createOscillator(); osc2.type = 'square'; osc2.connect(filter); osc2.start();
-            const bufferSize = 2 * this.ctx.sampleRate, buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate), output = buffer.getChannelData(0);
-            for(let i=0; i<bufferSize; i++) output[i] = Math.random() * 0.1 - 0.05;
-            const noise = this.ctx.createBufferSource(); noise.buffer = buffer; noise.loop = true; noise.connect(filter); noise.start();
             return { osc1, osc2, filter, gain: group };
         },
         updateEngine(engine, speed) {
@@ -342,14 +397,13 @@
             o.frequency.exponentialRampToValueAtTime(2000, this.ctx.currentTime + 0.1);
             g.gain.setValueAtTime(0.2, this.ctx.currentTime);
             g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
-            o.connect(g); g.connect(this.sfxGain); o.start(); o.stop(this.ctx.currentTime + 0.2);
+            o.connect(g); o.start(); o.stop(this.ctx.currentTime + 0.2);
         },
         applySettings() {
             if (!this.masterGain) return;
             this.masterGain.gain.setTargetAtTime(PersistedSettings.muted ? 0 : PersistedSettings.master, this.ctx.currentTime, 0.1);
             this.bgmGain.gain.setTargetAtTime(PersistedSettings.bgm, this.ctx.currentTime, 0.1);
             this.engineGain.gain.setTargetAtTime(PersistedSettings.engine, this.ctx.currentTime, 0.1);
-            this.sfxGain.gain.setTargetAtTime(PersistedSettings.sfx, this.ctx.currentTime, 0.1);
         }
     };
 
@@ -358,6 +412,7 @@
     function openSettings() { document.getElementById('settings-overlay').style.display = 'flex'; }
     function closeSettings() { document.getElementById('settings-overlay').style.display = 'none'; }
 
+    // 初始化與事件
     window.addEventListener('DOMContentLoaded', () => {
         PersistedSettings.load();
         const splash = document.getElementById('splash-screen');
@@ -411,26 +466,40 @@
         gameMode = m;
         document.querySelectorAll('.options-group .btn').forEach(b => b.id && b.id.includes('mode') && b.classList.remove('active'));
         document.getElementById(['mode-1p','mode-2p','mode-spec'][m-1]).classList.add('active');
+        
+        // 更新 Body 類別以便 CSS 適配
         if (m === 1) document.body.classList.add('mode-1p');
         else document.body.classList.remove('mode-1p');
     }
     
     function setGoal(n) { 
         goalCount = n; 
-        document.querySelectorAll('#diff-opts .btn').forEach(b => {
-            b.className = parseInt(b.innerText) === n ? 'btn active' : 'btn';
-        }); 
+        document.querySelectorAll('#diff-opts .btn').forEach(b => b.classList.toggle('active', parseInt(b.innerText) === n));
     }
 
     function initGame() {
         if (renderer) { renderer.dispose(); if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement); }
-        scene = new THREE.Scene(); scene.background = new THREE.Color(0x87ceeb); scene.fog = new THREE.Fog(0x87ceeb, 500, 4500);
-        renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setSize(window.innerWidth, window.innerHeight); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); renderer.autoClear = false; document.body.appendChild(renderer.domElement);
-        scene.add(new THREE.AmbientLight(0xffffff, 0.5)); const sun = new THREE.DirectionalLight(0xffffff, 1.0); sun.position.set(500, 1000, 200); scene.add(sun);
-        const ground = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), new THREE.MeshPhongMaterial({ color: 0x111111, shininess: 5 })); ground.rotation.x = -Math.PI / 2; scene.add(ground);
-        const grid = new THREE.GridHelper(10000, 100, 0x00d4ff, 0x222222); grid.position.y = 0.05; scene.add(grid);
+        scene = new THREE.Scene(); 
+        scene.background = new THREE.Color(PersistedSettings.theme === 'light' ? 0xe0e8f0 : 0x050505);
+        scene.fog = new THREE.Fog(scene.background, 500, 4500);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.autoClear = false;
+        document.body.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const sun = new THREE.DirectionalLight(0xffffff, 1.0); sun.position.set(500, 1000, 200); scene.add(sun);
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), new THREE.MeshPhongMaterial({ color: PersistedSettings.theme === 'light' ? 0xdddddd : 0x111111, shininess: 5 })); ground.rotation.x = -Math.PI / 2; scene.add(ground);
+        const grid = new THREE.GridHelper(10000, 100, 0x00d4ff, PersistedSettings.theme === 'light' ? 0xcccccc : 0x222222); grid.position.y = 0.05; scene.add(grid);
         const border = new THREE.Mesh(new THREE.RingGeometry(WORLD_LIMIT, WORLD_LIMIT + 30, 64), new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide })); border.rotation.x = -Math.PI / 2; border.position.y = 0.5; scene.add(border);
-        createCheckpoints(); p1 = createCar(1, p1Color); p2 = createCar(2, p2Color); p1.pos.set(-80, 0, 0); p2.pos.set(80, 0, 0); scene.add(p1.mesh); scene.add(p2.mesh);
+
+        createCheckpoints();
+        p1 = createCar(1, p1Color); p2 = createCar(2, p2Color); 
+        p1.pos.set(-80, 0, 0); p2.pos.set(80, 0, 0);
+        scene.add(p1.mesh); scene.add(p2.mesh);
+
         document.getElementById('p1-arrow-path').setAttribute('fill', '#' + p1Color.toString(16).padStart(6,'0'));
         document.getElementById('p2-arrow-path').setAttribute('fill', '#' + p2Color.toString(16).padStart(6,'0'));
         window.addEventListener('resize', onWindowResize);
@@ -502,8 +571,19 @@
         if (p.targetIndex < goalCount) {
             const target = checkpoints[p.targetIndex].pos, arrow = document.querySelector(`#p${p.id}-nav svg`), ta = Math.atan2(target.x-p.pos.x, target.z-p.pos.z);
             arrow.style.transform = `rotate(${(ta-p.rot)*(180/Math.PI)}deg)`;
-            const mapSize = isPE?110:170, scale = (mapSize*0.8)/(WORLD_LIMIT*2);
-            const setDot = (id, pos) => { const el = document.getElementById(id); if (el) { el.style.left = (pos.x*scale+mapSize/2)+'px'; el.style.top = (pos.z*scale+mapSize/2)+'px'; }};
+            
+            // PC 佈局優化尺寸
+            const isSplit = gameMode !== 1;
+            const mapSize = isPE ? 120 : (isSplit ? 140 : 180);
+            const scale = (mapSize*0.8)/(WORLD_LIMIT*2);
+            
+            const setDot = (id, pos) => { 
+                const el = document.getElementById(id); 
+                if (el) { 
+                    el.style.left = (pos.x*scale+mapSize/2)+'px'; 
+                    el.style.top = (pos.z*scale+mapSize/2)+'px'; 
+                }
+            };
             const other = p.id === 1 ? p2 : p1;
             setDot(`p${p.id}-radar-self`, p.pos); setDot(`p${p.id}-radar-other`, other.pos); setDot(`p${p.id}-radar-target`, target);
         }
@@ -516,7 +596,7 @@
         const totalTime = ((Date.now() - startTime)/1000).toFixed(2);
         const msg = (gameMode === 3) ? (p1.targetIndex >= goalCount ? "AI 1 獲勝" : "AI 2 獲勝") : (p1.targetIndex >= goalCount ? "玩家 1 獲勝" : (gameMode === 1 ? "模仿型 AI 獲勝" : "玩家 2 獲勝"));
         document.getElementById('win-title').innerText = msg;
-        document.getElementById('win-msg').innerText = `最終戰績統計：\n玩家 1 分數: ${p1.targetIndex}\n競爭者分數: ${p2.targetIndex}\n全程耗時: ${totalTime}s`;
+        document.getElementById('win-msg').innerText = `玩家 1 核心：${p1.targetIndex}\n對手/AI 核心：${p2.targetIndex}\n競速總耗時：${totalTime}s`;
         document.getElementById('win-screen').style.display = 'flex';
     }
 
@@ -560,14 +640,15 @@
                 } else {
                     el.style.display = 'block';
                 }
-                requestAnimationFrame(() => el.style.opacity = '1');
+                requestAnimationFrame(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                });
             });
-            // 核心修復：同步選單設定的核心數量到遊戲 HUD 並重置時速顯示
             document.getElementById('p1-total').innerText = goalCount;
             document.getElementById('p2-total').innerText = goalCount;
             document.getElementById('p1-speed').innerText = '0';
             document.getElementById('p2-speed').innerText = '0';
-            
             isFinished = false; startTime = Date.now();
             initGame(); gameRunning = true; animate();
         }, 400);
@@ -575,15 +656,14 @@
 
     function returnToMenu() {
         gameRunning = false;
-        // 清除按鍵緩存，防止下一局速度沒從 0 開始
         for (let k in keys) delete keys[k];
-        
         if (renderer) {
             renderer.domElement.parentNode && renderer.domElement.parentNode.removeChild(renderer.domElement);
             renderer.dispose();
         }
         document.querySelectorAll('.hud-element').forEach(el => {
             el.style.opacity = '0';
+            el.style.transform = 'translateY(10px)';
             setTimeout(() => el.style.display = 'none', 400);
         });
         document.getElementById('win-screen').style.display = 'none';
