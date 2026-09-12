@@ -11,27 +11,25 @@
             --primary: #00d4ff;
             --accent: #ff007f;
             --warning: #ffcc00;
-            /* 預設為深色模式變量 */
-            --bg-overlay: radial-gradient(circle at center, rgba(0,212,255,0.05) 0%, rgba(0,0,0,0.95) 100%);
-            --card-bg: rgba(15, 15, 15, 0.85);
+            --bg-overlay: radial-gradient(circle at center, rgba(0,212,255,0.08) 0%, rgba(0,0,0,0.95) 100%);
+            --card-bg: rgba(15, 15, 15, 0.7);
             --glass: rgba(255, 255, 255, 0.08);
-            --glass-active: rgba(255, 255, 255, 0.15);
+            --glass-active: rgba(255, 255, 255, 0.2);
             --text-main: #ffffff;
-            --text-dim: #888888;
-            --card-border: rgba(255, 255, 255, 0.1);
+            --text-dim: #999999;
+            --card-border: rgba(0, 212, 255, 0.3); /* 強化邊框科技感 */
             --touch-bg: rgba(255, 255, 255, 0.1);
         }
 
-        /* 明亮模式變量 - 優化按鈕能見度 */
         body.theme-light {
-            --bg-overlay: radial-gradient(circle at center, rgba(255,255,255,0.9) 0%, rgba(220,230,240,0.95) 100%);
-            --card-bg: rgba(255, 255, 255, 0.95);
-            --glass: rgba(0, 0, 0, 0.08); /* 稍微加深 */
+            --bg-overlay: radial-gradient(circle at center, rgba(255,255,255,0.9) 0%, rgba(200,220,240,0.95) 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --glass: rgba(0, 0, 0, 0.08); 
             --glass-active: rgba(0, 0, 0, 0.15);
             --text-main: #111111;
             --text-dim: #555555;
-            --card-border: rgba(0, 0, 0, 0.15);
-            --touch-bg: rgba(0, 0, 0, 0.12); /* 行動端按鍵在亮色下更明顯 */
+            --card-border: rgba(0, 212, 255, 0.5);
+            --touch-bg: rgba(0, 0, 0, 0.12);
         }
 
         body { margin: 0; overflow: hidden; font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif; background: #000; color: var(--text-main); touch-action: none; transition: background 0.5s, color 0.5s; }
@@ -47,148 +45,182 @@
             transition: opacity 0.8s ease-in-out; pointer-events: auto;
         }
         .splash-content { text-align: center; }
-        .splash-text {
-            font-size: 1.1rem; font-weight: 300; letter-spacing: 6px; color: #555;
-            opacity: 0; animation: fadeInOut 3s forwards; text-transform: uppercase;
-        }
+        .splash-text { font-size: 1.1rem; font-weight: 300; letter-spacing: 6px; color: #777; opacity: 0; animation: fadeInOut 3s forwards; text-transform: uppercase; }
         .splash-brand {
             font-size: 2.2rem; font-weight: 900; color: #fff; margin-top: 12px;
             opacity: 0; animation: fadeInOut 3s forwards; animation-delay: 0.2s;
-            text-shadow: 0 0 30px rgba(0,212,255,0.5);
+            text-shadow: 0 0 40px rgba(0,212,255,0.8);
         }
         @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateY(10px); }
-            25% { opacity: 1; transform: translateY(0); }
-            75% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-10px); }
+            0% { opacity: 0; transform: translateY(15px) scale(0.95); }
+            25% { opacity: 1; transform: translateY(0) scale(1); }
+            75% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-15px) scale(1.05); }
         }
 
-        /* 通用選單樣式 */
+        /* 通用選單樣式 (毛玻璃升級) */
         .overlay { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: var(--bg-overlay);
             display: flex; flex-direction: column; 
             justify-content: center; align-items: center; pointer-events: auto; z-index: 100;
-            backdrop-filter: blur(20px);
-            transition: opacity 0.4s ease-out, background 0.5s;
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            transition: opacity 0.5s ease-out, background 0.5s;
         }
         .menu-card { 
-            background: var(--card-bg); padding: 45px; border-radius: 40px; 
-            box-shadow: 0 25px 50px rgba(0,0,0,0.2); text-align: center; 
-            max-width: 600px; width: 85%; border: 1px solid var(--card-border);
-            max-height: 90vh; overflow-y: auto; position: relative;
-            animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            background: var(--card-bg); padding: 45px; border-radius: 30px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,212,255,0.1); 
+            text-align: center; max-width: 600px; width: 85%; border: 1px solid var(--card-border);
+            position: relative; overflow: hidden;
+            animation: cardEntrance 0.7s cubic-bezier(0.2, 1.2, 0.3, 1);
+        }
+        /* 卡片掃光特效 */
+        .menu-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
+            transform: rotate(45deg) translateY(-100%); transition: 0.5s; pointer-events: none;
+            animation: sweepLight 6s infinite;
+        }
+        @keyframes sweepLight {
+            0% { transform: rotate(45deg) translateY(-100%); }
+            20% { transform: rotate(45deg) translateY(100%); }
+            100% { transform: rotate(45deg) translateY(100%); }
         }
         @keyframes cardEntrance {
-            from { opacity: 0; transform: scale(0.9) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            from { opacity: 0; transform: scale(0.85) translateY(40px); filter: blur(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
         }
         
-        h1 { font-size: 3rem; margin: 0; color: var(--text-main); font-weight: 900; text-transform: uppercase; letter-spacing: -2px; line-height: 1; }
-        h1 span { color: var(--primary); text-shadow: 0 0 20px rgba(0,212,255,0.4); }
+        h1 { font-size: 3.2rem; margin: 0; color: var(--text-main); font-weight: 900; text-transform: uppercase; letter-spacing: -1px; line-height: 1; }
+        h1 span { color: var(--primary); text-shadow: 0 0 25px rgba(0,212,255,0.6); }
         
-        .section-label { margin: 25px 0 12px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 3px; }
-        .options-group { margin-bottom: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .section-label { margin: 25px 0 12px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 4px; }
+        .options-group { margin-bottom: 15px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
         
         .btn { 
-            background: var(--glass); color: var(--text-main); border: 1px solid var(--card-border); padding: 14px 28px; 
-            cursor: pointer; border-radius: 18px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.9rem; font-weight: 600;
+            background: var(--glass); color: var(--text-main); border: 1px solid rgba(255,255,255,0.1); padding: 12px 24px; 
+            cursor: pointer; border-radius: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.9rem; font-weight: 600;
         }
-        .btn:hover { background: var(--glass-active); transform: translateY(-2px); border-color: var(--primary); }
-        .btn.active { background: var(--primary); color: #000; font-weight: 800; border-color: #fff; box-shadow: 0 8px 20px rgba(0,212,255,0.4); }
+        .btn:hover { background: var(--glass-active); transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,212,255,0.2); }
+        .btn.active { background: var(--primary); color: #000; font-weight: 800; border-color: #fff; box-shadow: 0 8px 25px rgba(0,212,255,0.5); transform: translateY(-2px); }
         
-        .color-dot { width: 34px; height: 34px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s; }
-        .color-dot.active { border-color: var(--text-main); transform: scale(1.2) rotate(15deg); box-shadow: 0 0 20px var(--primary); }
+        .color-dot { width: 34px; height: 34px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; transition: 0.3s cubic-bezier(0.2, 1.2, 0.3, 1); }
+        .color-dot.active { border-color: #fff; transform: scale(1.3); box-shadow: 0 0 20px var(--primary), inset 0 0 10px rgba(255,255,255,0.5); }
         
+        /* 開始按鈕呼吸特效 */
         .start-btn { 
-            background: var(--text-main); color: var(--card-bg); padding: 20px 80px; font-size: 1.5rem; 
+            background: var(--text-main); color: var(--card-bg); padding: 18px 70px; font-size: 1.4rem; 
             border: none; border-radius: 100px; cursor: pointer; margin-top: 35px; font-weight: 900; 
-            transition: all 0.4s; letter-spacing: 1px;
+            transition: all 0.3s; letter-spacing: 2px;
+            animation: pulseGlow 2s infinite alternate; /* 加入呼吸光 */
         }
-        .start-btn:hover { background: var(--primary); color: #000; transform: translateY(-4px) scale(1.02); box-shadow: 0 15px 30px rgba(0,212,255,0.4); }
+        .start-btn:hover { background: var(--primary); color: #000; transform: translateY(-4px) scale(1.05); animation: none; box-shadow: 0 15px 40px rgba(0,212,255,0.6); }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+            100% { box-shadow: 0 0 25px rgba(255,255,255,0.5); }
+        }
 
-        .version-tag { position: absolute; bottom: 15px; right: 30px; font-size: 0.7rem; color: var(--text-dim); font-weight: 900; opacity: 0.5; }
+        .version-tag { position: absolute; bottom: 15px; right: 25px; font-size: 0.7rem; color: var(--text-dim); font-weight: 900; opacity: 0.5; }
 
-        /* 設定視窗微調 */
         #settings-overlay { display: none; z-index: 1200; }
         .setting-row { margin-bottom: 22px; width: 100%; }
         .setting-row label { display: block; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 10px; text-transform: uppercase; text-align: left; font-weight: 700; }
         .slider-container { display: flex; align-items: center; width: 100%; }
-        input[type="range"] { flex: 1; -webkit-appearance: none; background: var(--glass); height: 6px; border-radius: 10px; outline: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: var(--primary); border-radius: 50%; cursor: pointer; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        input[type="range"] { flex: 1; -webkit-appearance: none; background: var(--glass); height: 8px; border-radius: 10px; outline: none; border: 1px solid rgba(255,255,255,0.1); }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: var(--primary); border-radius: 50%; cursor: pointer; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.4); transition: 0.2s; }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
-        /* HUD 組件佈局 */
-        .hud-element { opacity: 0; transition: opacity 0.8s ease-in, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); position: absolute; pointer-events: none; }
+        /* HUD 組件動畫升級 - 初始狀態隱藏並偏移 */
+        .hud-element { 
+            opacity: 0; pointer-events: none; position: absolute;
+            transition: opacity 0.6s ease-out, transform 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+        }
         
-        /* 預設 PC 單人佈局 - 分散地圖與羅盤 */
-        .radar { top: 25px; left: 25px; width: 180px; height: 180px; background: rgba(0,0,0,0.5); border: 1px solid var(--card-border); border-radius: 24px; overflow: hidden; backdrop-filter: blur(10px); }
-        .compass { top: 25px; right: 25px; width: 80px; height: 80px; }
+        /* 利用 .show 類別來控制滑入 */
+        .hud-element.show { opacity: 1; transform: translate(0, 0) scale(1) !important; }
 
-        /* PC 雙人模式（非 mode-1p）佈局優化 */
+        /* 儀表板設計優化 */
+        .radar { top: 25px; left: 25px; width: 180px; height: 180px; background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.1); border-radius: 50%; overflow: hidden; backdrop-filter: blur(15px); box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,212,255,0.1); transform: scale(0.5); /* 初始縮小 */ }
+        .compass { top: 25px; right: 25px; width: 80px; height: 80px; transform: translateY(-50px); /* 初始往上移 */ }
+
         body.pc-mode:not(.mode-1p) .p1-radar { top: 25px; left: 25px; }
         body.pc-mode:not(.mode-1p) .p1-compass { top: 25px; left: calc(50% - 105px); right: auto; }
         body.pc-mode:not(.mode-1p) .p2-radar { top: 25px; right: 25px; left: auto; }
         body.pc-mode:not(.mode-1p) .p2-compass { top: 25px; right: calc(50% - 105px); left: auto; }
 
-        .player-hud { bottom: 35px; display: flex; flex-direction: column; gap: 10px; }
+        .player-hud { bottom: 35px; display: flex; flex-direction: column; gap: 12px; transform: translateY(80px); /* 初始往下移 */ }
         .p1-hud { left: 40px; }
         .p2-hud { right: 40px; text-align: right; }
         
-        .panel { background: rgba(0,0,0,0.6); padding: 15px 25px; border-radius: 25px; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-        .speed-val { font-size: 3rem; font-weight: 900; color: var(--primary); line-height: 0.9; font-variant-numeric: tabular-nums; }
-        .obj-count { font-size: 2rem; font-weight: 900; color: var(--accent); }
+        .panel { background: rgba(0,0,0,0.65); padding: 15px 25px; border-radius: 20px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .speed-val { font-size: 3.5rem; font-weight: 900; color: var(--primary); line-height: 0.9; font-variant-numeric: tabular-nums; text-shadow: 0 0 15px rgba(0,212,255,0.4); }
+        .obj-count { font-size: 2rem; font-weight: 900; color: var(--accent); text-shadow: 0 0 15px rgba(255,0,127,0.4); }
 
-        .compass svg { width: 100%; height: 100%; filter: drop-shadow(0 0 12px var(--accent)); }
-        .radar-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); }
-        .radar-dot.self { background: var(--primary); z-index: 5; box-shadow: 0 0 12px var(--primary); }
-        .radar-dot.other { background: var(--accent); z-index: 4; }
-        .radar-dot.target { background: #fff; z-index: 3; animation: pulse 1.2s infinite; }
+        .compass svg { width: 100%; height: 100%; filter: drop-shadow(0 0 15px var(--accent)); }
+        
+        /* 雷達點動畫升級 */
+        .radar-dot { position: absolute; width: 10px; height: 10px; border-radius: 50%; transform: translate(-50%, -50%); transition: left 0.1s, top 0.1s; }
+        .radar-dot.self { background: var(--primary); z-index: 5; box-shadow: 0 0 15px var(--primary); border: 2px solid #fff; }
+        .radar-dot.other { background: var(--accent); z-index: 4; border: 1px solid #fff; }
+        /* 目標點擴散波紋 */
+        .radar-dot.target { 
+            background: #fff; z-index: 3; 
+        }
+        .radar-dot.target::after {
+            content: ''; position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px;
+            border-radius: 50%; border: 2px solid #fff;
+            animation: radarRipple 1.5s infinite ease-out;
+        }
+        @keyframes radarRipple {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
 
-        /* 功能按鈕 */
-        .icon-btn { position: absolute; top: 25px; width: 48px; height: 48px; background: rgba(0,0,0,0.5); border-radius: 16px; display: flex; justify-content: center; align-items: center; cursor: pointer; pointer-events: auto; border: 1px solid var(--card-border); z-index: 800; opacity: 0; transition: all 0.3s; font-size: 1.4rem; }
-        #audio-btn { left: 50%; transform: translateX(-55px); }
-        #settings-btn { left: 50%; transform: translateX(5px); }
+        .icon-btn { position: absolute; top: 25px; width: 50px; height: 50px; background: rgba(0,0,0,0.6); border-radius: 16px; display: flex; justify-content: center; align-items: center; cursor: pointer; pointer-events: auto; border: 1px solid rgba(255,255,255,0.1); z-index: 800; font-size: 1.4rem; transform: translateY(-50px); /* 初始往上 */ backdrop-filter: blur(10px); }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--primary); transform: translateY(-3px) !important; /* 覆蓋 show 狀態 */ }
+        /* 使用 left 定位，並在 show 時重置 translateY */
+        #audio-btn { left: calc(50% - 60px); }
+        #settings-btn { left: calc(50% + 10px); }
+        /* 針對 icon-btn 的 show 狀態特別處理，保留 translateX 如果有的話，但這裡改用 calc 計算 left 就不需要 translateX 了 */
 
-        /* PE 模式佈局覆寫 */
-        body.pe-mode .radar { width: 120px; height: 120px; top: 15px; left: 15px; border-radius: 15px; }
-        body.pe-mode .compass { width: 50px; height: 50px; top: 15px; right: 15px; left: auto; }
-        body.pe-mode .player-hud { bottom: auto; top: 150px; }
+        body.pe-mode .radar { width: 130px; height: 130px; top: 15px; left: 15px; }
+        body.pe-mode .compass { width: 55px; height: 55px; top: 15px; right: 15px; left: auto; }
+        body.pe-mode .player-hud { bottom: auto; top: 160px; }
         body.pe-mode .p1-hud { left: 15px; }
         body.pe-mode .p2-hud { right: 15px; }
-        body.pe-mode .icon-btn { top: auto; bottom: 210px; width: 40px; height: 40px; }
+        body.pe-mode .icon-btn { top: auto; bottom: 210px; width: 45px; height: 45px; }
         
-        /* PE 控制項與防止 1P 雙 Gas */
-        .mobile-controls-wrapper { position: absolute; bottom: 30px; width: 100%; height: 160px; display: none; justify-content: space-between; padding: 0 15px; box-sizing: border-box; z-index: 500; opacity: 0; transition: opacity 0.8s; pointer-events: none; }
-        .ctrl-group { display: flex; gap: 10px; align-items: flex-end; pointer-events: auto; }
-        .touch-btn { width: 60px; height: 60px; background: var(--touch-bg); border: 1px solid var(--card-border); border-radius: 20px; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 1.2rem; color: var(--text-main); user-select: none; -webkit-tap-highlight-color: transparent; backdrop-filter: blur(10px); transition: 0.1s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .touch-btn:active { background: var(--primary); color: #000; transform: scale(0.85); box-shadow: 0 0 20px var(--primary); }
-        .touch-btn.accel { background: rgba(0,212,255,0.2); height: 80px; width: 80px; border-color: var(--primary); }
+        .mobile-controls-wrapper { position: absolute; bottom: 30px; width: 100%; height: 160px; display: none; justify-content: space-between; padding: 0 15px; box-sizing: border-box; z-index: 500; transform: translateY(100px); /* 初始往下 */ pointer-events: none; }
+        .ctrl-group { display: flex; gap: 12px; align-items: flex-end; pointer-events: auto; }
+        .touch-btn { width: 65px; height: 65px; background: var(--touch-bg); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 1.3rem; color: var(--text-main); user-select: none; -webkit-tap-highlight-color: transparent; backdrop-filter: blur(15px); transition: 0.1s; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .touch-btn:active { background: var(--primary); color: #000; transform: scale(0.85); box-shadow: 0 0 30px var(--primary); border-color: #fff; }
+        .touch-btn.accel { background: rgba(0,212,255,0.15); height: 85px; width: 85px; border-color: var(--primary); }
 
-        /* 1P 模式下強制隱藏 P2 控制組 */
         body.mode-1p .ctrl-p2 { display: none !important; }
         body.mode-1p .mobile-controls-wrapper { justify-content: space-around; padding: 0 30px; }
 
-        #warning-box { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 0, 0, 0.8); color: white; padding: 15px 30px; border-radius: 20px; font-weight: 900; display: none; z-index: 1000; border: 2px solid white; text-align: center; box-shadow: 0 0 40px rgba(255,0,0,0.5); }
-        .esc-tip { left: 50%; transform: translateX(-50%); font-size: 0.75rem; color: var(--text-dim); top: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-        .divider { left: 50%; top: 0; width: 2px; height: 100%; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.3), transparent); transform: translateX(-50%); display: none; }
+        #warning-box { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%) scale(0.5); background: rgba(255, 0, 50, 0.9); color: white; padding: 20px 40px; border-radius: 25px; font-weight: 900; display: none; z-index: 1000; border: 3px solid white; text-align: center; box-shadow: 0 0 50px rgba(255,0,0,0.8); opacity: 0; transition: all 0.3s cubic-bezier(0.2, 1.5, 0.5, 1); }
+        #warning-box.show-warn { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); animation: shake 0.4s infinite; }
+        @keyframes shake { 0%, 100% { transform: translate(-50%, -50%) rotate(0deg); } 25% { transform: translate(-52%, -50%) rotate(-2deg); } 75% { transform: translate(-48%, -50%) rotate(2deg); } }
+        
+        .esc-tip { left: 50%; margin-left: -70px; font-size: 0.8rem; color: var(--text-dim); top: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; transform: translateY(-30px); background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 10px; }
+        .divider { left: 50%; top: 0; width: 3px; height: 100%; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.5), transparent); transform: translateX(-50%); display: none; opacity: 0; transition: opacity 1s; }
     </style>
 </head>
-<body class="pc-mode mode-1p"> <!-- 預設為 1P 類別 -->
+<body class="pc-mode mode-1p">
 
 <div id="ui-layer">
-    <!-- 啟動畫面 -->
     <div id="splash-screen">
         <div class="splash-content">
-            <div class="splash-text">A High Performance Experience</div>
-            <div class="splash-brand">Produced by JSCZ International Group</div>
+            <div class="splash-text">NEXT-GEN RENDERING ENABLED</div>
+            <div class="splash-brand">SPEED ARENA 3.0</div>
         </div>
     </div>
 
-    <!-- 主選單 -->
     <div id="start-menu" class="overlay" style="display: none; opacity: 0;">
         <div class="menu-card">
             <h1>SPEED <span>ARENA</span></h1>
-            <p style="color: var(--text-dim); font-size: 0.85rem; margin-top:8px; font-weight: 600;">ADVANCED AI MIMICRY | MULTI-PLATFORM ENGINE</p>
+            <p style="color: var(--text-dim); font-size: 0.85rem; margin-top:10px; font-weight: 600;">PHYSICALLY BASED RENDERING | DYNAMIC SHADOWS</p>
             
             <div class="section-label">RACE MODE</div>
             <div class="options-group">
@@ -197,13 +229,13 @@
                 <button class="btn" id="mode-spec" onclick="setMode(3)">巔峰觀賽</button>
             </div>
 
-            <div style="display: flex; justify-content: center; gap: 40px; margin-top: 15px;">
+            <div style="display: flex; justify-content: center; gap: 50px; margin-top: 20px;">
                 <div>
-                    <div class="section-label">P1 COLOR</div>
+                    <div class="section-label">P1 NEON</div>
                     <div class="options-group" id="p1-colors"></div>
                 </div>
                 <div>
-                    <div class="section-label" id="p2-label">P2/AI COLOR</div>
+                    <div class="section-label" id="p2-label">P2/AI NEON</div>
                     <div class="options-group" id="p2-colors"></div>
                 </div>
             </div>
@@ -216,19 +248,18 @@
             </div>
 
             <button class="start-btn" onclick="startGame()">ENTER WORLD</button>
-            <div style="margin-top:15px;"><button class="btn" style="padding: 10px 30px; font-size: 0.8rem; opacity: 0.8;" onclick="openSettings()">遊戲設定</button></div>
+            <div style="margin-top:20px;"><button class="btn" style="padding: 10px 30px; font-size: 0.8rem; opacity: 0.7;" onclick="openSettings()">系統設定</button></div>
             
-            <div class="version-tag">Beta 2.0</div>
+            <div class="version-tag">Engine v3.0 PBR</div>
         </div>
     </div>
 
-    <!-- 設定視窗 -->
     <div id="settings-overlay" class="overlay">
         <div class="menu-card settings-card">
-            <h2 style="margin-top:0; letter-spacing: 4px; font-weight: 900;">SETTINGS</h2>
+            <h2 style="margin-top:0; letter-spacing: 5px; font-weight: 900; color: var(--primary);">SETTINGS</h2>
             
             <div class="setting-row">
-                <label>介面主題 Theme Mode</label>
+                <label>介面主題 Theme</label>
                 <div class="options-group">
                     <button class="btn active" id="theme-dark-btn" onclick="setTheme('dark')">深色霓虹</button>
                     <button class="btn" id="theme-light-btn" onclick="setTheme('light')">清爽明亮</button>
@@ -236,7 +267,7 @@
             </div>
 
             <div class="setting-row">
-                <label>主音量 Master Volume</label>
+                <label>主音量 Master</label>
                 <div class="slider-container"><input type="range" id="vol-master" min="0" max="1" step="0.01" value="0.8" oninput="updateAudioSettings()"></div>
             </div>
             <div class="setting-row">
@@ -248,40 +279,36 @@
                 <div class="slider-container"><input type="range" id="vol-bgm" min="0" max="1" step="0.01" value="0.3" oninput="updateAudioSettings()"></div>
             </div>
             
-            <button class="start-btn" style="padding:15px 50px; font-size:1.1rem; margin-top:10px;" onclick="closeSettings()">完成</button>
+            <button class="start-btn" style="padding:15px 50px; font-size:1.1rem; margin-top:15px; animation: none;" onclick="closeSettings()">套用設定</button>
         </div>
     </div>
 
-    <!-- 頂部功能區 -->
     <div id="audio-btn" class="icon-btn hud-element" onclick="toggleMute()">🔊</div>
     <div id="settings-btn" class="icon-btn hud-element" onclick="openSettings()">⚙️</div>
 
-    <!-- 結算畫面 -->
     <div id="win-screen" class="overlay" style="display: none;">
         <div class="menu-card">
             <h1 id="win-title">RACE FINISHED</h1>
-            <p id="win-msg" style="margin: 25px 0; font-size: 1.15rem; white-space: pre-wrap; line-height: 1.8; color: var(--text-dim);"></p>
-            <button class="start-btn" onclick="returnToMenu()">返回主選單</button>
+            <p id="win-msg" style="margin: 30px 0; font-size: 1.2rem; white-space: pre-wrap; line-height: 1.8; color: var(--text-main); font-weight: 600;"></p>
+            <button class="start-btn" onclick="returnToMenu()">返回中樞</button>
         </div>
     </div>
 
-    <!-- HUD 核心元素 -->
-    <div id="p1-nav" class="compass p1-compass hud-element"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.1" /><path d="M50 10 L65 45 L50 38 L35 45 Z" id="p1-arrow-path" /></svg></div>
-    <div id="p2-nav" class="compass p2-compass hud-element"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.1" /><path d="M50 10 L65 45 L50 38 L35 45 Z" id="p2-arrow-path" /></svg></div>
+    <div id="p1-nav" class="compass p1-compass hud-element"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2" opacity="0.2" /><path d="M50 10 L65 45 L50 38 L35 45 Z" id="p1-arrow-path" /></svg></div>
+    <div id="p2-nav" class="compass p2-compass hud-element"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2" opacity="0.2" /><path d="M50 10 L65 45 L50 38 L35 45 Z" id="p2-arrow-path" /></svg></div>
 
     <div id="p1-radar-ui" class="radar p1-radar hud-element"><div id="p1-radar-target" class="radar-dot target"></div><div id="p1-radar-other" class="radar-dot other"></div><div id="p1-radar-self" class="radar-dot self"></div></div>
     <div id="p2-radar-ui" class="radar p2-radar hud-element"><div id="p2-radar-target" class="radar-dot target"></div><div id="p2-radar-other" class="radar-dot other"></div><div id="p2-radar-self" class="radar-dot self"></div></div>
 
     <div id="p1-hud" class="player-hud p1-hud hud-element">
-        <div class="panel"><div class="speed-val" id="p1-speed">0</div><div style="font-size:0.6rem; opacity:0.6; font-weight: 800; letter-spacing: 1px;">KM/H</div></div>
+        <div class="panel"><div class="speed-val" id="p1-speed">0</div><div style="font-size:0.65rem; opacity:0.8; font-weight: 800; letter-spacing: 2px;">KM/H</div></div>
         <div class="panel"><div class="obj-count"><span id="p1-collected">0</span> / <span id="p1-total">10</span></div></div>
     </div>
     <div id="p2-hud" class="player-hud p2-hud hud-element">
-        <div class="panel"><div class="speed-val" id="p2-speed">0</div><div style="font-size:0.6rem; opacity:0.6; font-weight: 800; letter-spacing: 1px;">P2 KM/H</div></div>
+        <div class="panel"><div class="speed-val" id="p2-speed">0</div><div style="font-size:0.65rem; opacity:0.8; font-weight: 800; letter-spacing: 2px;">P2 KM/H</div></div>
         <div class="panel"><div class="obj-count"><span id="p2-collected">0</span> / <span id="p2-total">10</span></div></div>
     </div>
 
-    <!-- PE 控制區 -->
     <div id="mobile-controls-wrapper" class="mobile-controls-wrapper hud-element">
         <div class="ctrl-p1" style="display: flex; gap: 40px;">
             <div class="ctrl-group"><div class="touch-btn" id="p1-btn-left">←</div><div class="touch-btn" id="p1-btn-right">→</div></div>
@@ -295,7 +322,7 @@
 
     <div id="warning-box"><div>⚠️ 邊界警報 ⚠️</div><div id="warn-timer">3</div> 秒後強制回傳</div>
     <div id="divider" class="divider hud-element"></div>
-    <div class="esc-tip hud-element" id="esc-ui-tip">按下 ESC 返回選單</div>
+    <div class="esc-tip hud-element" id="esc-ui-tip">ESC 返回中樞</div>
 </div>
 
 <script>
@@ -334,7 +361,6 @@
             this.master = parseFloat(document.getElementById('vol-master').value);
             this.bgm = parseFloat(document.getElementById('vol-bgm').value);
             this.engine = parseFloat(document.getElementById('vol-engine').value);
-            sessionStorage.setItem('racing_settings', JSON.stringify(this)); // 修正存檔 Key
             sessionStorage.setItem('racing_settings_v3', JSON.stringify(this));
         }
     };
@@ -343,17 +369,14 @@
         PersistedSettings.theme = t;
         if (t === 'light') document.body.classList.add('theme-light');
         else document.body.classList.remove('theme-light');
-        
         document.getElementById('theme-dark-btn').classList.toggle('active', t === 'dark');
         document.getElementById('theme-light-btn').classList.toggle('active', t === 'light');
-        
         if (shouldSave) PersistedSettings.save();
     }
 
-    // 音頻引擎
+    // 音頻引擎 (保持不變)
     const AudioEngine = {
-        ctx: null, masterGain: null, bgmGain: null, engineGain: null,
-        p1Engine: null, p2Engine: null,
+        ctx: null, masterGain: null, bgmGain: null, engineGain: null, p1Engine: null, p2Engine: null,
         init() {
             if (this.ctx) return;
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -466,33 +489,55 @@
         gameMode = m;
         document.querySelectorAll('.options-group .btn').forEach(b => b.id && b.id.includes('mode') && b.classList.remove('active'));
         document.getElementById(['mode-1p','mode-2p','mode-spec'][m-1]).classList.add('active');
-        
-        // 更新 Body 類別以便 CSS 適配
-        if (m === 1) document.body.classList.add('mode-1p');
-        else document.body.classList.remove('mode-1p');
+        if (m === 1) document.body.classList.add('mode-1p'); else document.body.classList.remove('mode-1p');
     }
-    
     function setGoal(n) { 
         goalCount = n; 
         document.querySelectorAll('#diff-opts .btn').forEach(b => b.classList.toggle('active', parseInt(b.innerText) === n));
     }
 
+    // --- Three.js 光影核心升級 ---
     function initGame() {
         if (renderer) { renderer.dispose(); if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement); }
         scene = new THREE.Scene(); 
         scene.background = new THREE.Color(PersistedSettings.theme === 'light' ? 0xe0e8f0 : 0x050505);
         scene.fog = new THREE.Fog(scene.background, 500, 4500);
 
-        renderer = new THREE.WebGLRenderer({ antialias: true });
+        // 升級渲染器設定 (開啟陰影與 Tone Mapping)
+        renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.autoClear = false;
+        renderer.shadowMap.enabled = true; // 開啟陰影
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap; // 柔和陰影
+        renderer.toneMapping = THREE.ACESFilmicToneMapping; // 電影級色彩映射
+        renderer.toneMappingExposure = 1.2;
         document.body.appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-        const sun = new THREE.DirectionalLight(0xffffff, 1.0); sun.position.set(500, 1000, 200); scene.add(sun);
-        const ground = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), new THREE.MeshPhongMaterial({ color: PersistedSettings.theme === 'light' ? 0xdddddd : 0x111111, shininess: 5 })); ground.rotation.x = -Math.PI / 2; scene.add(ground);
-        const grid = new THREE.GridHelper(10000, 100, 0x00d4ff, PersistedSettings.theme === 'light' ? 0xcccccc : 0x222222); grid.position.y = 0.05; scene.add(grid);
+        // 燈光系統升級
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.4)); // 基礎環境光
+        
+        // 主光源 (稍微帶有角度，提供基礎立體感，主要陰影由車底的 PointLight 提供以節省效能)
+        const sun = new THREE.DirectionalLight(0xffffff, 0.8); 
+        sun.position.set(500, 1000, 200); 
+        scene.add(sun);
+
+        // 地板改用 Standard 材質以接收光影
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(12000, 12000), 
+            new THREE.MeshStandardMaterial({ 
+                color: PersistedSettings.theme === 'light' ? 0xcccccc : 0x111111, 
+                roughness: 0.6, metalness: 0.2 
+            })
+        ); 
+        ground.rotation.x = -Math.PI / 2; 
+        ground.receiveShadow = true; // 接收陰影
+        scene.add(ground);
+        
+        const grid = new THREE.GridHelper(10000, 100, 0x00d4ff, PersistedSettings.theme === 'light' ? 0xbbbbbb : 0x222222); 
+        grid.position.y = 0.05; scene.add(grid);
+        
+        // 邊界材質
         const border = new THREE.Mesh(new THREE.RingGeometry(WORLD_LIMIT, WORLD_LIMIT + 30, 64), new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide })); border.rotation.x = -Math.PI / 2; border.position.y = 0.5; scene.add(border);
 
         createCheckpoints();
@@ -509,18 +554,48 @@
         checkpoints = []; const range = 3200;
         const beamGeo = new THREE.CylinderGeometry(18, 18, 1200, 16), ringGeo = new THREE.RingGeometry(35, 65, 32);
         for (let i = 0; i < goalCount; i++) {
-            const group = new THREE.Group(), beam = new THREE.Mesh(beamGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 }));
+            const group = new THREE.Group();
+            // 升級為發光材質
+            const beam = new THREE.Mesh(beamGeo, new THREE.MeshStandardMaterial({ 
+                color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.5, transparent: true, opacity: 0.7 
+            }));
             beam.position.y = 600; group.add(beam);
-            const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI/2; ring.position.y = 1.5; group.add(ring);
+            const ring = new THREE.Mesh(ringGeo, new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1, side: THREE.DoubleSide })); 
+            ring.rotation.x = -Math.PI/2; ring.position.y = 1.5; group.add(ring);
+            
             group.position.set((Math.random()-0.5)*range*2, 0, (Math.random()-0.5)*range*2); scene.add(group);
             checkpoints.push({ mesh: group, beam, ring, pos: group.position.clone() });
         }
     }
 
     function createCar(id, color) {
-        const group = new THREE.Group(), body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.0, 5.2), new THREE.MeshPhongMaterial({ color }));
-        body.position.y = 0.6; group.add(body);
-        const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.7, 2), new THREE.MeshPhongMaterial({ color: 0x000000 })); cabin.position.set(0, 1.35, -0.25); group.add(cabin);
+        const group = new THREE.Group();
+        // 升級車體材質 (PBR 金屬感)
+        const body = new THREE.Mesh(
+            new THREE.BoxGeometry(2.6, 1.0, 5.2), 
+            new THREE.MeshStandardMaterial({ color, roughness: 0.2, metalness: 0.7 })
+        );
+        body.position.y = 0.6; 
+        body.castShadow = true; // 產生陰影
+        group.add(body);
+        
+        const cabin = new THREE.Mesh(
+            new THREE.BoxGeometry(1.7, 0.7, 2), 
+            new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.1, metalness: 0.9 })
+        ); 
+        cabin.position.set(0, 1.35, -0.25); 
+        cabin.castShadow = true;
+        group.add(cabin);
+
+        // 加入專屬底盤霓虹點光源 (製造超讚動態陰影)
+        const neonLight = new THREE.PointLight(color, 2, 150);
+        neonLight.position.set(0, 5, 0); // 稍微拉高以投射車體陰影到地板
+        neonLight.castShadow = true;
+        neonLight.shadow.mapSize.width = 512;
+        neonLight.shadow.mapSize.height = 512;
+        neonLight.shadow.bias = -0.001;
+        group.add(neonLight);
+
         const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 5500);
         return { id, mesh: group, camera, pos: new THREE.Vector3(), rot: 0, vel: 0, oobTimer: 0, targetIndex: 0, color: new THREE.Color(color), aiTargetRot: 0, aiNoiseSeed: Math.random()*1000, mistakeTimer: 0, lastMistakeOffset: new THREE.Vector3() };
     }
@@ -548,13 +623,16 @@
         if (ctrl.left) p.rot += sp; if (ctrl.right) p.rot -= sp;
         p.pos.x += Math.sin(p.rot)*p.vel*delta*2; p.pos.z += Math.cos(p.rot)*p.vel*delta*2;
         p.mesh.position.copy(p.pos); p.mesh.rotation.y = p.rot;
+        
+        const warnBox = document.getElementById('warning-box');
         if (Math.abs(p.pos.x) > WORLD_LIMIT || Math.abs(p.pos.z) > WORLD_LIMIT) {
             if (p.id === 1 && gameMode !== 3) {
-                document.getElementById('warning-box').style.display = 'block'; p.oobTimer += delta;
+                warnBox.classList.add('show-warn'); p.oobTimer += delta;
                 document.getElementById('warn-timer').innerText = Math.ceil(3.1-p.oobTimer);
                 if (p.oobTimer >= 3) { teleport(p); p.oobTimer = 0; }
             } else teleport(p);
-        } else if (p.id === 1) { document.getElementById('warning-box').style.display = 'none'; p.oobTimer = 0; }
+        } else if (p.id === 1) { warnBox.classList.remove('show-warn'); p.oobTimer = 0; }
+        
         p.camera.fov = 70 + Math.min(45, (Math.abs(p.vel)/250)*45); p.camera.updateProjectionMatrix();
         const camOff = new THREE.Vector3(-Math.sin(p.rot)*32, 16, -Math.cos(p.rot)*32);
         p.camera.position.copy(p.pos).add(camOff); p.camera.lookAt(p.pos.clone().add(new THREE.Vector3(0,3,0)));
@@ -572,9 +650,8 @@
             const target = checkpoints[p.targetIndex].pos, arrow = document.querySelector(`#p${p.id}-nav svg`), ta = Math.atan2(target.x-p.pos.x, target.z-p.pos.z);
             arrow.style.transform = `rotate(${(ta-p.rot)*(180/Math.PI)}deg)`;
             
-            // PC 佈局優化尺寸
             const isSplit = gameMode !== 1;
-            const mapSize = isPE ? 120 : (isSplit ? 140 : 180);
+            const mapSize = isPE ? 130 : (isSplit ? 140 : 180);
             const scale = (mapSize*0.8)/(WORLD_LIMIT*2);
             
             const setDot = (id, pos) => { 
@@ -605,9 +682,18 @@
             const oDone = (idx < other.targetIndex); cp.mesh.visible = (idx === viewer.targetIndex);
             if (cp.mesh.visible) {
                 const mix = new THREE.Color().copy(viewer.color).lerp(other.color, 0.5);
-                if (oDone) { cp.beam.material.color.copy(other.color); cp.ring.material.color.copy(other.color); }
-                else if (idx === other.targetIndex) { cp.beam.material.color.copy(mix); cp.ring.material.color.copy(mix); }
-                else { cp.beam.material.color.copy(viewer.color); cp.ring.material.color.copy(viewer.color); }
+                if (oDone) { 
+                    cp.beam.material.color.copy(other.color); cp.beam.material.emissive.copy(other.color);
+                    cp.ring.material.color.copy(other.color); cp.ring.material.emissive.copy(other.color);
+                }
+                else if (idx === other.targetIndex) { 
+                    cp.beam.material.color.copy(mix); cp.beam.material.emissive.copy(mix);
+                    cp.ring.material.color.copy(mix); cp.ring.material.emissive.copy(mix);
+                }
+                else { 
+                    cp.beam.material.color.copy(viewer.color); cp.beam.material.emissive.copy(viewer.color);
+                    cp.ring.material.color.copy(viewer.color); cp.ring.material.emissive.copy(viewer.color);
+                }
             }
         });
     }
@@ -631,19 +717,17 @@
         AudioEngine.init(); const menu = document.getElementById('start-menu'); menu.style.opacity = '0';
         setTimeout(() => {
             menu.style.display = 'none';
+            // HUD 元素動態滑入
             document.querySelectorAll('.hud-element').forEach(el => {
                 const id = el.id;
                 if (gameMode === 1 && (id.includes('p2') || id === 'divider')) return;
-                if (id === 'mobile-controls-wrapper') {
-                    if (!isPE || gameMode === 3) return;
-                    el.style.display = 'flex';
-                } else {
-                    el.style.display = 'block';
-                }
-                requestAnimationFrame(() => {
-                    el.style.opacity = '1';
-                    el.style.transform = 'translateY(0)';
-                });
+                
+                if (id === 'divider') el.style.display = 'block';
+                else if (id === 'mobile-controls-wrapper' && isPE && gameMode !== 3) el.style.display = 'flex';
+                else if (id !== 'mobile-controls-wrapper') el.style.display = 'block';
+
+                // 稍微延遲讓 display: block 生效後再加 class 觸發動畫
+                requestAnimationFrame(() => { el.classList.add('show'); });
             });
             document.getElementById('p1-total').innerText = goalCount;
             document.getElementById('p2-total').innerText = goalCount;
@@ -651,7 +735,7 @@
             document.getElementById('p2-speed').innerText = '0';
             isFinished = false; startTime = Date.now();
             initGame(); gameRunning = true; animate();
-        }, 400);
+        }, 500);
     }
 
     function returnToMenu() {
@@ -662,10 +746,10 @@
             renderer.dispose();
         }
         document.querySelectorAll('.hud-element').forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(10px)';
-            setTimeout(() => el.style.display = 'none', 400);
+            el.classList.remove('show');
+            setTimeout(() => el.style.display = 'none', 800);
         });
+        document.getElementById('warning-box').classList.remove('show-warn');
         document.getElementById('win-screen').style.display = 'none';
         const menu = document.getElementById('start-menu');
         menu.style.display = 'flex';
