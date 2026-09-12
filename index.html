@@ -69,22 +69,26 @@
         .menu-card { 
             background: var(--card-bg); padding: 40px 30px; border-radius: 30px; 
             box-shadow: 0 30px 60px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,212,255,0.1); 
-            text-align: center; max-width: 600px; width: 90%; max-height: 95vh; overflow-y: auto;
+            text-align: center; max-width: 600px; width: 90%; max-height: 95vh; 
+            overflow-y: auto; overflow-x: hidden; /* 加入 overflow-x 防止水平溢出 */
             border: 1px solid var(--card-border); position: relative; box-sizing: border-box;
             animation: cardEntrance 0.7s cubic-bezier(0.2, 1.2, 0.3, 1);
-        }
-        
+       }
+
         .menu-card::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
-            transform: rotate(45deg) translateY(-100%); transition: 0.5s; pointer-events: none;
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.05) 25%, transparent 30%);
+            background-size: 200% 100%; background-position: 100% 0;
+            pointer-events: none; border-radius: 30px; /* 配合卡片圓角 */
             animation: sweepLight 6s infinite;
-        }
+      }
+
         @keyframes sweepLight {
-            0% { transform: rotate(45deg) translateY(-100%); }
-            20% { transform: rotate(45deg) translateY(100%); }
-            100% { transform: rotate(45deg) translateY(100%); }
-        }
+            0% { background-position: 150% 0; }
+            20% { background-position: -50% 0; }
+            100% { background-position: -50% 0; }
+    }
+        
         @keyframes cardEntrance {
             from { opacity: 0; transform: scale(0.85) translateY(40px); filter: blur(10px); }
             to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
